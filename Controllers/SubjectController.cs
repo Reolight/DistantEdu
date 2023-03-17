@@ -23,5 +23,11 @@ namespace SomeName.Controllers
             return (new List<Subject>() { new Subject { Description = "New subject like a math", Name = "Mathlike", Id = 1 } })
                 .ToArray();
         }
+
+        [HttpPost]
+        public async Task Post([FromBody] Subject subject)
+        {
+
+        }
     }
 }

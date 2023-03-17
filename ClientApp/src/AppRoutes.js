@@ -1,3 +1,4 @@
+import Aezakmi from './components/Aezakmi';
 import ApiAuthorzationRoutes from './components/api-authorization/ApiAuthorizationRoutes';
 import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
@@ -16,7 +17,12 @@ const AppRoutes = [
     path: '/fetch-data',
     requireAuth: true,
     element: <FetchData />
-  },
+    },
+    {
+        path: '/aezakmi',
+        requireAuth: true,
+        element: <Aezakmi />
+    },
   ...ApiAuthorzationRoutes
 ];
 

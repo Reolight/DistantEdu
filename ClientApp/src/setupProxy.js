@@ -12,7 +12,8 @@ const context = [
   "/connect",
   "/ApplyDatabaseMigrations",
     "/_framework",
-    "/subject"
+    "/subject",
+    "/Toggler"
 ];
 
 const onError = (err, req, resp, target) => {

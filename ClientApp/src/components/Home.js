@@ -1,12 +1,23 @@
 import React, { Component, useEffect, useState } from 'react';
 import authService from './api-authorization/AuthorizeService';
 import { Button, Typography, Card, CardActionArea, CardContent, CardActions } from "@mui/material";
+import SubjectItem from './Subjects/SubjectItemjsx';
 
 const displayName = Home.name;
 
 export function Home() {
-
+    const [user, setUser] = useState(0);
     const [state, setState] = useState({ Subjects: [], isLoading: true})
+
+    useEffect(() => {
+        async function loadUser() {
+            const u = await authService.getUser()
+            setUser(u)
+        }
+
+        if (user === 0)
+            loadUser()
+    })
 
     useEffect(() => {
         async function loadSubjInfo() {
@@ -22,21 +33,10 @@ export function Home() {
     }, [state])
         
     return (
-      <div>
+        <div>
             {!state.isLoading && (<>
                 {state.Subjects.map(subject => {
-                    return (<Card>
-                        <CardActionArea>
-                            <CardContent>
-                                <Typography gutterBottom variant="h5" component="div">
-                                    {subject.name}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    {subject.description}
-                                </Typography>
-                            </CardContent>
-                        </CardActionArea>
-                    </Card>)
+                    return <SubjectItem subject={subject} role={user.role} />
                 })}</>
             )}
       </div>

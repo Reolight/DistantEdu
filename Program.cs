@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using SomeName.Data;
 using SomeName.Models;
-
+using SomeName.Services;
 
 namespace SomeName
 {
@@ -25,7 +25,8 @@ namespace SomeName
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>()
+                .AddProfileService<ProfileService>();
 
             builder.Services.AddAuthentication()
                 .AddIdentityServerJwt();
@@ -39,7 +40,7 @@ namespace SomeName
             {
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-                string[] roles = { "admin", "teacher", "student" };
+                string[] roles = { Roles.Admin, Roles.Teacher, Roles.Student };
                 foreach (var role in roles)
                 {
                     if (!(await roleManager.RoleExistsAsync(role)))

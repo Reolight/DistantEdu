@@ -1,11 +1,12 @@
-﻿import React from 'react'
+﻿import React, { useState } from 'react'
 import { Button, Typography, Card, CardActionArea, CardContent, CardActions } from "@mui/material";
+import SubjectNew from './SubjectNew';
 
 // props = {subject, userRole}
 
 export default function SubjectItem(props) {
 
-    return (<Card key={props.subject.id}>
+    return (<Card key = { props.subject.id } >
         <CardActionArea>
             <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
@@ -21,7 +22,10 @@ export default function SubjectItem(props) {
                 Enter
             </Button>
             {(props.role === "teacher" || props.role === 'admin') && (
-                <Button size="small" color="secondary">
+                <Button size="small" color="secondary" onClick={() => {
+                    console.log(`[${props.subject.id}] ${props.subject.name}: pressed edit button`)
+                    props.editQuery(props.subject.id)
+                }} >
                     Edit
                 </Button>
             )}

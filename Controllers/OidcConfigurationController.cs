@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Mvc;
 
-namespace SomeName.Controllers
+namespace DistantEdu.Controllers
 {
     public class OidcConfigurationController : Controller
     {

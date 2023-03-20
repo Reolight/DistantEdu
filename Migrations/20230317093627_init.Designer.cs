@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SomeName.Data;
+using DistantEdu.Data;
 
 #nullable disable
 
-namespace SomeName.Migrations
+namespace DistantEdu.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20230317093627_init")]

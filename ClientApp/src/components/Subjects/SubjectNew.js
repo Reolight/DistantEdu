@@ -17,8 +17,7 @@ export default function SubjectNew(props) {
             setState({
                 subject: {
                     name: '',
-                    description: '',
-                    author: props.author
+                    description: ''
                 },
                 isReady: true, isNew: true
             })

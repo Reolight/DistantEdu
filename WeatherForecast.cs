@@ -1,4 +1,4 @@
-namespace SomeName
+namespace DistantEdu
 {
     public class WeatherForecast
     {

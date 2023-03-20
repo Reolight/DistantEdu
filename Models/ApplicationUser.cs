@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using DistantEdu.Models;
+using DistantEdu.Models.StudentProfileFeature;
+using Microsoft.AspNetCore.Identity;
 
-namespace SomeName.Models
+namespace DistantEdu.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        public StudentProfile? Profile { get; set; }
     }
 }

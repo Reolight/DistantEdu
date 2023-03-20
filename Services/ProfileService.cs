@@ -2,10 +2,10 @@
 using Duende.IdentityServer.Services;
 using IdentityModel;
 using Microsoft.AspNetCore.Identity;
-using SomeName.Models;
+using DistantEdu.Models;
 using System.Security.Claims;
 
-namespace SomeName.Services
+namespace DistantEdu.Services
 {
     public class ProfileService : IProfileService
     {

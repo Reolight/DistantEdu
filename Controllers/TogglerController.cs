@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using SomeName.Models;
+using DistantEdu.Models;
 
-namespace SomeName.Controllers
+namespace DistantEdu.Controllers
 {
     [Authorize]
     [ApiController]

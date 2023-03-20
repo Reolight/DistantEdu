@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
-using SomeName.Data;
-using SomeName.Models;
-using SomeName.Services;
+using DistantEdu.Data;
+using DistantEdu.Models;
+using DistantEdu.Services;
 
-namespace SomeName
+namespace DistantEdu
 {
     public class Program
     {

@@ -1,16 +1,17 @@
-﻿using DistantLearningSystemReact.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SomeName.Data;
-using SomeName.Models;
+using DistantEdu.Data;
+using DistantEdu.Models;
+using DistantEdu.Models.SubjectFeature;
+using DistantEdu.ViewModels;
 
-namespace SomeName.Controllers
+namespace DistantEdu.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class SubjectController
+    public class SubjectController : ControllerBase
     {
         private readonly ILogger<SubjectController> _logger;
         private readonly ApplicationDbContext _context;
@@ -24,15 +25,23 @@ namespace SomeName.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(string), 200)]
-        public async Task<IEnumerable<Subject>> Get()
+        public async Task<ActionResult<IEnumerable<SubjectViewModel>>> Get()
         {
-            return await _context.Subjects.ToListAsync();
+            var UserClaims = User.Identity;
+            var subjects = await _context.Subjects.Include(sub => sub.SubscribedUsers).ToListAsync();
+            if (subjects is not { }) return new List<SubjectViewModel>();
+            var viewModels = subjects.Select(sub => 
+                new SubjectViewModel(sub, UserClaims is null? false : sub.SubscribedUsers.Any(user => user.Name == UserClaims.Name)));
+            return Ok(viewModels);
         }
 
         [HttpPost]
         [ProducesResponseType(201)]
-        public async Task<IActionResult> Post([FromBody] Subject subject)
+        public async Task<IActionResult> Post([FromBody] SubjectViewModel subjectVm)
         {
+            if (User.Identity is not { Name: { } } AuthorClaims) return BadRequest();
+            subjectVm.Author = AuthorClaims.Name;
+            var subject = new Subject(subjectVm);
             await _context.Subjects.AddAsync(subject);
             await _context.SaveChangesAsync();
             return new CreatedAtActionResult("getbyid", "Subject", new {id = subject.Id}, subject);
@@ -41,9 +50,12 @@ namespace SomeName.Controllers
         [HttpPut]
         [ProducesResponseType(200)]
         [Route("{id}")]
-        public async Task<ActionResult> Put(int id, [FromBody] Subject subject)
+        public async Task<ActionResult> Put(int id, [FromBody] SubjectViewModel subject)
         {
-            _context.Subjects.Update(subject);
+            var subjectOrig = await _context.Subjects.FirstOrDefaultAsync(x => x.Id == subject.Id);
+            if (subjectOrig is null) return BadRequest();
+            subjectOrig.Update(subject);
+            _context.Subjects.Update(subjectOrig);
             await _context.SaveChangesAsync();
             return new NoContentResult();
         }

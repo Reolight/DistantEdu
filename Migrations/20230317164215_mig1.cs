@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace SomeName.Migrations
+namespace DistantEdu.Migrations
 {
     /// <inheritdoc />
     public partial class mig1 : Migration

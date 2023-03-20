@@ -29,6 +29,7 @@ export function Home() {
                 headers: !token ? {} : { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
+            console.log(data)
             setState({ Subjects: data, isLoading: false });
         }
         if (state.isLoading) loadSubjInfo()

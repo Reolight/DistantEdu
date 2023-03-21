@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ADMIN_ROLE, STUDENT_ROLE, TEACHER_ROLE } from '../../roles';
+import { ADMIN_ROLE, authenticate, STUDENT_ROLE, TEACHER_ROLE } from '../../roles';
 import authService from '../api-authorization/AuthorizeService';
 import { Button } from "@mui/material";
 import ListItem from '../Common/ListItem';
@@ -51,7 +51,7 @@ export default function SubjectView() {
 
             <p>{state.subject.description}</p>
             
-            {!pageState.editMode && (user.role === TEACHER_ROLE || user.role === ADMIN_ROLE) && (<>
+            {!pageState.editMode && (<>
             <p>
                 {state.subject.lessons.map(lesson => {
                         return <ListItem
@@ -74,7 +74,7 @@ export default function SubjectView() {
                         />
                     })}
             </p>
-            <p>
+            {authenticate(user.role, TEACHER_ROLE) && (<p>
                 <Button
                     variant='outlined'
                     color="secondary"
@@ -85,7 +85,8 @@ export default function SubjectView() {
                         setPageState({ editMode: true })
                     }}
                 >Add</Button>
-            </p></>)}
+            </p>)}
+            </>)}
         </div>
     )
 }

@@ -54,10 +54,10 @@ namespace DistantEdu.Controllers
                 if (studProfile is not { } profile) { return Ok(subject); }
 
                 subject.SubscribedUsers.Add(profile);
-                profile.SubscribedSubjects.Add(new Models.StudentProfileFeature.SubjectSubscription
+                profile.SubjectSubscriptions.Add(new Models.StudentProfileFeature.SubjectSubscription
                 {
                     LessonScores = new(),
-                    SubscribedSubject = subject
+                    SubjectId = subject.Id
                 });
 
                 _context.SaveChanges();

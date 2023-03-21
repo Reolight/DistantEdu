@@ -18,23 +18,24 @@ namespace DistantEdu.Controllers
             _context = context;
         }
 
-        [HttpGet("lesson")]
+        [HttpGet]
         public async Task<ActionResult<Lesson>> GetLesson(int subjectId, int lessonId)
         {
 
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
                 return Unauthorized();
             var subject = await _context.Subjects.FindAsync(subjectId);
-            if (await _context.StudentProfiles.Include(p => p.SubscribedSubjects).FirstOrDefaultAsync(profile => profile.Name == userClaims.Subject.Name) is not { } profile)
+            if (await _context.StudentProfiles.Include(p => p.SubjectSubscriptions).FirstOrDefaultAsync(profile => profile.Name == userClaims.Subject.Name) is not { } profile)
                 return BadRequest("There is no student profile");
-            if (profile.SubscribedSubjects.FirstOrDefault(sub => sub.Id == subjectId) is not { }) 
+            if (profile.SubjectSubscriptions.FirstOrDefault(sub => sub.SubjectId == subjectId) is not { }) 
                 return BadRequest("You not subscribed on required subject");
             if (await _context.Lessons.FindAsync(lessonId) is not { } lesson)
                 return BadRequest("Lesson not found");
             else return Ok(lesson);
         }
 
-        [HttpPost("lesson")]
+        [HttpPost]
+        [Authorize(Roles = "teacher,admin")]
         public async Task<ActionResult> PostLesson(int subjectId, [FromBody] Lesson lesson)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) 
@@ -43,10 +44,11 @@ namespace DistantEdu.Controllers
                 return BadRequest("Subject with given id not found");
             subject.Lessons.Add(lesson);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(PostLesson), lesson.Id);
+            return CreatedAtAction(nameof(PostLesson), lesson);
         }
 
-        [HttpPut("lesson")]
+        [HttpPut]
+        [Authorize(Roles = "teacher,admin")]
         public async Task<ActionResult> UpdateLesson(int subjectId, [FromBody] Lesson lesson)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
@@ -58,7 +60,8 @@ namespace DistantEdu.Controllers
             return NoContent();
         }
 
-        [HttpDelete("lesson")]
+        [HttpDelete]
+        [Authorize(Roles = "teacher,admin")]
         public async Task<ActionResult> DeleteLesson(int subjectId, int lessonId) 
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)

@@ -30,10 +30,11 @@ namespace DistantEdu.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public async Task<ActionResult<IEnumerable<SubjectViewModel>>> Get()
         {
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } UserClaims) return Unauthorized();
             var subjects = await _context.Subjects.Include(sub => sub.SubscribedUsers).ToListAsync();
             if (subjects is not { }) return new List<SubjectViewModel>();
             var viewModels = subjects.Select(sub => 
-                new SubjectViewModel(sub, UserClaims is null? false : sub.SubscribedUsers.Any(user => user.Name == UserClaims.Name)));
+                new SubjectViewModel(sub, sub.SubscribedUsers.Any(user => user.Name == UserClaims.Subject.Name)));
             return Ok(viewModels);
         }
 
@@ -43,7 +44,7 @@ namespace DistantEdu.Controllers
         [Route("{id}")]
         public async Task<ActionResult<SubjectViewModel>> Get(int id)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) return NoContent();
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) return Unauthorized();
             var subject = await _context.Subjects
                 .Include(s => s.Lessons)
                 .Include(s => s.SubscribedUsers)
@@ -56,6 +57,7 @@ namespace DistantEdu.Controllers
                 _context.SaveChanges();
             }
 
+            subject.Lessons.OrderBy(lesson => lesson.Order);
             return Ok(subject);
         }
 

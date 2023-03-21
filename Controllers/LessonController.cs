@@ -19,15 +19,15 @@ namespace DistantEdu.Controllers
         }
 
         [HttpGet("lesson")]
-        public async Task<ActionResult<Lesson>> GetLesson(int subjId, int lessonId)
+        public async Task<ActionResult<Lesson>> GetLesson(int subjectId, int lessonId)
         {
 
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
                 return Unauthorized();
-            var subject = await _context.Subjects.FindAsync(subjId);
+            var subject = await _context.Subjects.FindAsync(subjectId);
             if (await _context.StudentProfiles.Include(p => p.SubscribedSubjects).FirstOrDefaultAsync(profile => profile.Name == userClaims.Subject.Name) is not { } profile)
                 return BadRequest("There is no student profile");
-            if (profile.SubscribedSubjects.FirstOrDefault(sub => sub.Id == subjId) is not { }) 
+            if (profile.SubscribedSubjects.FirstOrDefault(sub => sub.Id == subjectId) is not { }) 
                 return BadRequest("You not subscribed on required subject");
             if (await _context.Lessons.FindAsync(lessonId) is not { } lesson)
                 return BadRequest("Lesson not found");

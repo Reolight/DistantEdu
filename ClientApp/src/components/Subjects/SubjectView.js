@@ -1,12 +1,14 @@
 ﻿import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ADMIN_ROLE, STUDENT_ROLE, TEACHER_ROLE } from '../../roles';
 import authService from '../api-authorization/AuthorizeService';
 import { Button } from "@mui/material";
+import ListItem from '../Common/ListItem';
 
 export default function SubjectView() {
     const { id } = useParams();
     const [ state, setState ] = useState({ subject: undefined, isLoading: true })
+    const navigate = useNavigate();
 
     const [pageState, setPageState] = useState({ editMode: false, editedInstance: undefined })
     const [user, setUser] = useState(0)
@@ -67,7 +69,7 @@ export default function SubjectView() {
 
                                 navigate(`/lesson/${enteringdLesson.id}`)
                             } }
-                            editQuery={editChild}
+                            editQuery={(id) => console.log(`I won't edit ${id}. Get lost`)}
                             removeQuery={(id) => console.log(`remove was pressed but nothing happened)))`)}
                         />
                     })}

@@ -5,5 +5,11 @@
         public int Id { get; set; }
         public string Name { get; set; }
         public List<SubjectSubscription> SubscribedSubjects { get; set; }
+
+        public StudentProfile() { }
+        public StudentProfile(string name)
+        {
+            Name = name;
+        }
     }
 }

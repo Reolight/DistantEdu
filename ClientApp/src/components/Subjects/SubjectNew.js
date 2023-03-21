@@ -17,7 +17,8 @@ export default function SubjectNew(props) {
             setState({
                 subject: {
                     name: '',
-                    description: ''
+                    description: '',
+                    lessons: []
                 },
                 isReady: true, isNew: true
             })
@@ -40,8 +41,13 @@ export default function SubjectNew(props) {
         });
 
         console.log(response.json())
-        if (response.ok) alert('Saved');
-        props.onDone();
+        if (response.ok) {
+            alert('Saved');
+            props.onDone();
+        }
+        else {
+            alert(response.status)
+        }
     }
 
     if (state.subject === undefined) return <i>Loading...</i>

@@ -6,10 +6,13 @@ using DistantEdu.Data;
 using DistantEdu.Models;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace DistantEdu.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class SubjectController : ControllerBase
     {
@@ -27,7 +30,6 @@ namespace DistantEdu.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public async Task<ActionResult<IEnumerable<SubjectViewModel>>> Get()
         {
-            var UserClaims = User.Identity;
             var subjects = await _context.Subjects.Include(sub => sub.SubscribedUsers).ToListAsync();
             if (subjects is not { }) return new List<SubjectViewModel>();
             var viewModels = subjects.Select(sub => 
@@ -35,12 +37,35 @@ namespace DistantEdu.Controllers
             return Ok(viewModels);
         }
 
+        [HttpGet]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(204)]
+        [Route("{id}")]
+        public async Task<ActionResult<SubjectViewModel>> Get(int id)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) return NoContent();
+            var subject = await _context.Subjects
+                .Include(s => s.Lessons)
+                .Include(s => s.SubscribedUsers)
+                .FirstAsync(s => s.Id == id);
+            if (!subject.SubscribedUsers.Any(user => user.Name == userClaims.Subject.Name)) {
+                var studProfile = await _context.StudentProfiles.FirstOrDefaultAsync(s => s.Name == userClaims.Subject.Name);
+                if (studProfile is not { } profile) { return Ok(subject); }
+
+                subject.SubscribedUsers.Add(profile);
+                _context.SaveChanges();
+            }
+
+            return Ok(subject);
+        }
+
         [HttpPost]
         [ProducesResponseType(201)]
+        [ProducesResponseType(204)]
         public async Task<IActionResult> Post([FromBody] SubjectViewModel subjectVm)
         {
-            if (User.Identity is not { Name: { } } AuthorClaims) return BadRequest();
-            subjectVm.Author = AuthorClaims.Name;
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } AuthorClaims) return NoContent();
+            subjectVm.Author = AuthorClaims.Subject.Name;
             var subject = new Subject(subjectVm);
             await _context.Subjects.AddAsync(subject);
             await _context.SaveChangesAsync();

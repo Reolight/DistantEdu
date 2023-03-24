@@ -35,7 +35,6 @@ namespace DistantEdu.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "teacher,admin")]
         public async Task<ActionResult> PostLesson(int subjectId, [FromBody] Lesson lesson)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) 
@@ -48,20 +47,16 @@ namespace DistantEdu.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "teacher,admin")]
         public async Task<ActionResult> UpdateLesson(int subjectId, [FromBody] Lesson lesson)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
                 return Unauthorized();
-            if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
-                return BadRequest("Subject with given id not found");
-            _context.Lessons.Update(lesson);
+            _context.Entry(lesson).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
         [HttpDelete]
-        [Authorize(Roles = "teacher,admin")]
         public async Task<ActionResult> DeleteLesson(int subjectId, int lessonId) 
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)

@@ -7,6 +7,9 @@ namespace DistantEdu.Models.StudentProfileFeature
     {
         public int Id { get; set; }
 
+        [ForeignKey(nameof(StudentProfile))]
+        public int StudentProfileId { get; set; }
+
         [ForeignKey(nameof(Subject))]
         public int SubjectId { get; set; }
         public List<LessonScore> LessonScores { get; set; } = new();

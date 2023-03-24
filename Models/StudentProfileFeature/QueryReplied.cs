@@ -7,6 +7,7 @@ namespace DistantEdu.Models.StudentProfileFeature
     {
         public int Id { get; set; }
         public Query RepliedQuery { get; set; }
+        public bool isReplied { get; set; }
         public bool isCorrect { get; set; }
         public List<Replied> Answers { get; set; }
     }

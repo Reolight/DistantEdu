@@ -22,7 +22,7 @@ namespace DistantEdu.Services
 
         // selecting only those, where present more questions than specified in 
         private async Task<List<Quiz>> GetAvailableQuizesAsync(int lessonId)
-            => await _context.Quizs.Include(q => q.Questions)
+            => await _context.Quizzes.Include(q => q.Questions)
             .Where(q => q.LessonId == lessonId && q.Questions.Count >= q.Count)
             .ToListAsync();
 

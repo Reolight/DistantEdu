@@ -7,14 +7,13 @@ namespace DistantEdu.Models.StudentProfileFeature
     {
         public int Id { get; set; }
 
-        [ForeignKey(nameof(StudentProfile))]
-        public int StudentProfileId { get; set; }
-
+        // unic per user
         [ForeignKey(nameof(LessonScore))]
         public int LessonScoreId { get; set; }
         public int QuizId { get; set; }
         public int Score { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public List<QueryReplied> queryReplieds { get; set; }
     }
 }

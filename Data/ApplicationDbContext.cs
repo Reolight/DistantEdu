@@ -17,7 +17,7 @@ namespace DistantEdu.Data
         public DbSet<ApplicationUser> Users { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
-        public DbSet<Quiz> Quizs { get; set; }
+        public DbSet<Quiz> Quizzes { get; set; }
         
 
         public ApplicationDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> operationalStoreOptions)

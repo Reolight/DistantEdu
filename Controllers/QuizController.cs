@@ -3,6 +3,7 @@ using DistantEdu.Data;
 using DistantEdu.Models;
 using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.Models.SubjectFeature;
+using DistantEdu.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,26 +22,25 @@ namespace DistantEdu.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public QuizController(ApplicationDbContext context)
+        private readonly QuizService _quizService;
+        public QuizController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, QuizService quizService)
         {
             _context = context;
+            _userManager = userManager;
+            _quizService = quizService;
         }
 
         [HttpGet]
         public async Task<ActionResult> GetActiveQuiz()
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims ||
+                await _context.StudentProfiles
+                    .Include(st => st.UnfinishedQuizzes)
+                    .FirstOrDefaultAsync(sp => sp.Name == userClaims.Subject.Name) is not { } profile)
                 return Unauthorized();
-            var unfinishedQuiz = await _context.QuizScores
-                .Where(qs => qs.EndTime != null)
-                .FirstOrDefaultAsync(qs => _context.StudentProfiles
-                    .FindAsync(qs.StudentProfileId)
-                    .GetAwaiter()
-                    .GetResult()!.Name == userClaims.Subject.Name
-            );
 
-            return unfinishedQuiz != null ? Ok(unfinishedQuiz) : Ok();
+            var unfinishedQuizes = _quizService.GetUnfinishedShallowQuizedById(profile.UnfinishedQuizzes);
+            return unfinishedQuizes != null ? Ok(unfinishedQuizes) : Ok();
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace DistantEdu.Controllers
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
             var user = await _userManager.FindByNameAsync(userClaims.Subject.Name);
-            var test = await _context.Quizs.FindAsync(quizId);
+            var test = await _context.Quizzes.FindAsync(quizId);
             
             if (test == null || user == null) 
                 return NotFound();
@@ -74,7 +74,7 @@ namespace DistantEdu.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
-            await _context.Quizs.AddAsync(quiz);
+            await _context.Quizzes.AddAsync(quiz);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetQuiz), quiz);
         }

@@ -1,5 +1,6 @@
 ﻿using DistantEdu.Data;
 using DistantEdu.Models.SubjectFeature;
+using DistantEdu.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +14,15 @@ namespace DistantEdu.Controllers
     public class LessonController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public LessonController(ApplicationDbContext context)
+        private readonly LessonService _lessonService;
+        public LessonController(ApplicationDbContext context, LessonService lessonService)
         {
             _context = context;
+            _lessonService = lessonService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<Lesson>> GetLesson(int subjectId, int lessonId)
+        public async Task<ActionResult> GetLesson(int subjectId, int lessonId)
         {
 
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
@@ -29,9 +32,9 @@ namespace DistantEdu.Controllers
                 return BadRequest("There is no student profile");
             if (profile.SubjectSubscriptions.FirstOrDefault(sub => sub.SubjectId == subjectId) is not { }) 
                 return BadRequest("You not subscribed on required subject");
-            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson)
-                return BadRequest("Lesson not found");
-            else return Ok(lesson);
+
+            var lesson = _lessonService.GetLessonPerStudent(lessonId, userClaims.Subject.Name);
+            return Ok(lesson);
         }
 
         [HttpPost]

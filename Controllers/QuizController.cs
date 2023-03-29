@@ -23,11 +23,13 @@ namespace DistantEdu.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly QuizService _quizService;
-        public QuizController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, QuizService quizService)
+        private readonly LessonService _lessonService;
+        public QuizController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, QuizService quizService, LessonService lessonService)
         {
             _context = context;
             _userManager = userManager;
             _quizService = quizService;
+            _lessonService = lessonService;
         }
 
         [HttpGet]
@@ -35,7 +37,9 @@ namespace DistantEdu.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims ||
                 await _context.StudentProfiles
+                    .AsNoTracking()
                     .Include(st => st.UnfinishedQuizzes)
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(sp => sp.Name == userClaims.Subject.Name) is not { } profile)
                 return Unauthorized();
 
@@ -43,40 +47,49 @@ namespace DistantEdu.Controllers
             return unfinishedQuizes != null ? Ok(unfinishedQuizes) : Ok();
         }
 
-        /// <summary>
-        /// HttpGet for quiz by Id
-        /// </summary>
-        /// <param name="quizId">If of required quiz</param>
-        /// <returns>Quiz in the next cases: quiz contains more or equal Quiestions specified in Count property or less if issuer is a teacher or an admin. 
-        /// Returns Unauthorised if there is no Claims. Not found if there is no such quiz or in the case if student tries to get access to quiz 
-        /// with lack of questions.</returns>
-        [HttpGet]
-        public async Task<ActionResult> GetQuiz(int quizId)
+        [HttpPost]
+        public async Task<ActionResult> PostNewQuiz(int lessonId, [FromBody] Quiz quiz)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
-                return Unauthorized();
-            var user = await _userManager.FindByNameAsync(userClaims.Subject.Name);
-            var test = await _context.Quizzes.FindAsync(quizId);
-            
-            if (test == null || user == null) 
-                return NotFound();
+            List<Query> queriesWithErrors = new();
+            foreach (Query query in quiz.Questions)
+            {
+                if (query.Count > query.Replies.Count)
+                    queriesWithErrors.Add(query);
+            }
 
-            if (test.Questions.Count >= test.Count)
-                return Ok(test);
-            
-            if (await _userManager.IsInRoleAsync(user, Roles.Teacher) || await _userManager.IsInRoleAsync(user, Roles.Admin))
-                return Ok(test);
-            return NotFound();
+            quiz.Questions = quiz.Questions.Except(queriesWithErrors).ToList();
+            bool isReadyForUse = quiz.Questions.Count >= quiz.Count;
+            await _context.Quizzes.AddAsync(quiz);
+            await _context.SaveChangesAsync();
+            return Ok(new {
+                isReady = isReadyForUse,
+                removed_questions = queriesWithErrors.Select(q => q.Content),
+                posted = quiz
+            });
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> GetQuizInfo(int lessonScoreId, int quizId)
+        {
+            var shallowQuizInfo = await _quizService.GetShallowQuizInfoAsync(lessonScoreId, quizId);
+            return Ok(shallowQuizInfo);
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostQuiz([FromBody] Quiz quiz)
+        public async Task<ActionResult> StartQuiz(int lessonScoreId, int quizId)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
-                return Unauthorized();
-            await _context.Quizzes.AddAsync(quiz);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetQuiz), quiz);
+            var startetQuiz = await _quizService.StartNewQuizAsync(quizId, lessonScoreId);
+            return startetQuiz is not null? Ok(startetQuiz) : BadRequest("quest can not be started");
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> FinishQuest(int quizScoreId)
+        {
+            if (await _context.QuizScores.FindAsync(quizScoreId) is not { } quizScore)
+                return BadRequest(new { message = $"quiz with {quizScoreId} is not found" });
+            _ = await _quizService.FinishQuizAsync(quizScoreId);
+            await _lessonService.DecideIfLessonPassed(quizScore.LessonScoreId);
+            return Ok(new { message = "Finished", redirect = $"quiz\\{quizScoreId}" });
         }
     }
 }

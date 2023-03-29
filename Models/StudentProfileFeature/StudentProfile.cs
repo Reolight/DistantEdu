@@ -4,8 +4,8 @@
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public List<SubjectSubscription> SubjectSubscriptions { get; set; } = new();
-        public List<QuizScore> UnfinishedQuizzes { get; set; }
+        public virtual List<SubjectSubscription> SubjectSubscriptions { get; set; } = new();
+        public virtual List<QuizScore> UnfinishedQuizzes { get; set; }
 
 
         public StudentProfile() { }

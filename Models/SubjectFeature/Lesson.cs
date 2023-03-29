@@ -10,6 +10,7 @@ namespace DistantEdu.Models.SubjectFeature
         [ForeignKey(nameof(Subject))]
         public int SubjectId { get; set; }
         // For making a sort of linked list. Unic. Identical order nunbers give in result blocks of lessons
+        public virtual Subject Subject { get; set; }
         public int Order { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }

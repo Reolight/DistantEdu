@@ -1,6 +1,7 @@
 ﻿using DistantEdu.Data;
 using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.Models.SubjectFeature;
+using DistantEdu.Types;
 using DistantEdu.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Immutable;
@@ -13,9 +14,8 @@ namespace DistantEdu.Services
 
         private readonly ApplicationDbContext? _context;
         private readonly ILogger<QuizService> _logger;
-        
         public QuizService() { }
-        public QuizService(ApplicationDbContext context, ILogger<QuizService> logger)
+        public QuizService(ApplicationDbContext context, ILogger<QuizService> logger, LessonService lessonService)
         {
             _context = context;
             _logger = logger;
@@ -25,9 +25,9 @@ namespace DistantEdu.Services
         #region RETRIEVING_FROM_DB
         private async Task<Quiz?> RetrieveQuizFromDbAsync(int quizId, bool isShallow = false)
         {
-            if (_context is not { } db) 
+            if (_context is not { } db)
                 throw new NullReferenceException($"{nameof(db)} is null");
-            return isShallow? 
+            return isShallow ?
                 await db.Quizzes.FindAsync(quizId) :
                 await db.Quizzes
                     .Where(q => q.Id == quizId)
@@ -40,12 +40,24 @@ namespace DistantEdu.Services
             if (_context is not { } db)
                 throw new NullReferenceException($"{nameof(db)} is null");
             return isShallow ?
-                await db.QuizScores.FirstOrDefaultAsync(qs => qs.LessonScoreId == lessonScoreId && qs.QuizId == quizId) : 
+                await db.QuizScores.FirstOrDefaultAsync(qs => qs.LessonScoreId == lessonScoreId && qs.QuizId == quizId) :
                 await db.QuizScores
                 .Where(qs => qs.LessonScoreId == lessonScoreId && qs.QuizId == quizId)
-                .Include(qs => qs.queryReplieds)
+                .Include(qs => qs.QueryReplieds)
                 .ThenInclude(qr => qr.Answers)
                 .FirstOrDefaultAsync();
+        }
+
+        private async Task<QuizScore?> RetrieveScoreFromDbByIdAsync(int quizScoreId, bool isShallow = false)
+        {
+            if (_context is not { } db)
+                throw new NullReferenceException($"{nameof(db)} is null");
+            return isShallow ?
+                await db.QuizScores.FindAsync(quizScoreId) :
+                await db.QuizScores
+                .Include(qs => qs.QueryReplieds)
+                .ThenInclude(qr => qr.Answers)
+                .FirstOrDefaultAsync(qs => qs.Id == quizScoreId);
         }
 
         #endregion
@@ -70,11 +82,20 @@ namespace DistantEdu.Services
             return quizScore;
         }
 
-        private async Task<Quiz?> GetQuizWrappedByLoggerByIdAsync(int quizId)
+        private async Task<Quiz?> GetQuizWrappedByLoggerByIdAsync(int quizId, bool isShallow = false)
         {
-            if (_context is not { } db)
-                throw new NullReferenceException("Database is null");
-            return await db.Quizzes.FindAsync(quizId);
+            var quiz = await RetrieveQuizFromDbAsync(quizId, isShallow);
+            if (quiz is null)
+                _logger.Log(LogLevel.Error, $"there is no such quiz [{quizId}]");
+            return quiz;
+        }
+
+        private async Task<QuizScore?> GetScoreWrappedByLoggerByIdAsync(int quizScoreId, bool isShallow = false)
+        {
+            var quizScore = await RetrieveScoreFromDbByIdAsync(quizScoreId, isShallow);
+            if (quizScore is null)
+                _logger.Log(LogLevel.Error, $"there is no such quiz [{quizScoreId}]");
+            return quizScore;
         }
 
         #endregion
@@ -100,15 +121,15 @@ namespace DistantEdu.Services
         private void AttachDeepQuizScoreVmAsync(QuizViewModel quizVm, QuizScore quizScore)
         {
             if (quizVm.Questions is null || quizVm.Questions.Count == 0) return;
-            foreach (var questAnswered in quizScore.queryReplieds)
+            foreach (var questAnswered in quizScore.QueryReplieds)
             {
                 if (quizVm.Questions?.Find(q => q.QueryId == questAnswered.QueryId) is not { } questVm)
                     continue;
                 questVm.IsCorrect = questAnswered.isCorrect;
                 questVm.QueryScoreId = questAnswered.Id;
                 questVm.IsReplied = questAnswered.isReplied;
-                
-                foreach(var replied in questAnswered.Answers)
+
+                foreach (var replied in questAnswered.Answers)
                 {
                     if (questVm.Replies.Find(r => r.RepliedId == replied.Id) is not { } replyVm)
                         continue;
@@ -162,7 +183,7 @@ namespace DistantEdu.Services
 
         public async Task<QuizViewModel?> StartNewQuizAsync(int quizId, int lessonScoreId)
         {
-            if (await GetStartedNewQuizAsync(quizId) is not { } quiz)
+            if (await GetStartedNewQuizAsync(quizId, lessonScoreId) is not { } quiz)
                 return null;
 
             var quizScore = await SaveInDbAsync(quiz, lessonScoreId);
@@ -170,7 +191,20 @@ namespace DistantEdu.Services
             return quiz;
         }
 
-        public async Task<QuizViewModel?> GetStartedNewQuizAsync(int quizId)
+        private async Task<bool> DecideIfQuizCanBeStarted(Quiz quiz, int lessonScoreId)
+        {
+            if (_context is not { } db || await db.LessonScores.FindAsync(lessonScoreId) is not { } lessonScore)
+                return false;
+
+            if (lessonScore.QuizScoresList
+                .Where(qs => qs.QuizId == quiz.Id && (quiz.QType == QuizType.Hardcore || quiz.QType == QuizType.KeyHardcore))
+                .Any())
+
+                return false;
+            return true;
+        }
+
+        private async Task<QuizViewModel?> GetStartedNewQuizAsync(int quizId, int lessonScoreId)
         {
             if (await RetrieveQuizFromDbAsync(quizId) is not { } q)
             {
@@ -178,17 +212,20 @@ namespace DistantEdu.Services
                 return null;
             }
 
+            if (!await DecideIfQuizCanBeStarted(q, lessonScoreId))
+                return null;
+
             var buildedQuestions = BuildQuestions(q.Questions, q.Count);
 
             // Finish building, starting quest and return it back
             return new QuizViewModel(q)
             {
-                StartTime = DateTime.Now,
+                StartTime = DateTimeOffset.UtcNow,
                 Questions = buildedQuestions.ToList()
             };
-        }        
+        }
 
-        public IEnumerable<QuestionViewModel> BuildQuestions(List<Query> queries, int queryCount)
+        private IEnumerable<QuestionViewModel> BuildQuestions(List<Query> queries, int queryCount)
         {
             var randomlySelectedQueries = SelectRandomElements(queries, queryCount);
             return from query in randomlySelectedQueries
@@ -197,7 +234,7 @@ namespace DistantEdu.Services
                        QueryId = query.Id,
                        Content = query.Content,
                        IsReplied = false,
-                       IsCorrect = false,
+                       IsCorrect = Types.CorrectGrades.Unreplied,
                        Replies = (from reply in SelectRandomElements(query.Replies, query.Count)
                                   select new ReplyViewModel
                                   {
@@ -246,7 +283,7 @@ namespace DistantEdu.Services
 
                 // nullable check just to remove warning. Must be initialized before coming there
                 StartTime = quizVm.StartTime ?? DateTime.Now,
-                queryReplieds = quizVm.Questions is not null ? BuildRepliedQueriesTemplate(quizVm.Questions).ToList() : new()
+                QueryReplieds = quizVm.Questions is not null ? BuildRepliedQueriesTemplate(quizVm.Questions).ToList() : new()
             };
         }
 
@@ -254,8 +291,8 @@ namespace DistantEdu.Services
         {
             foreach (QuestionViewModel questionVm in questionViewModels)
             {
-                yield return new QueryReplied { 
-                    isCorrect = false, 
+                yield return new QueryReplied {
+                    isCorrect = Types.CorrectGrades.Unreplied,
                     isReplied = false,
                     QueryId = questionVm.QueryId,
                     Answers = BuildAnswersTemplate(questionVm.Replies).ToList()
@@ -277,6 +314,33 @@ namespace DistantEdu.Services
 
         #endregion
 
+        #region MERGING
+
+        // Deep merging of one quizScores and one quiz.
+        // ChainDeepMerging is an extension method and can be found at the end of file;
+        private QuizViewModel MergeInViewModelDeep(QuizScore quizScore, Quiz quiz)
+            => new QuizViewModel()
+                .MergeInViewModelShallow(quizScore, quiz)
+                .ChainDeepMerging(quizScore, quiz);
+
+        // Joins deeply Quizzes with QuizScores.
+        private IEnumerable<QuizViewModel> JoinOnQuizzesDeep(IEnumerable<QuizScore> quizScores, IEnumerable<Quiz> quizzes)
+        {
+            return from quizScore in quizScores
+                   join quiz in quizzes on quizScore.QuizId equals quiz.Id
+                   select MergeInViewModelDeep(quizScore, quiz);
+        }
+
+        // Joins shallow quizzes with quizScores
+        private IEnumerable<QuizViewModel> JoinOnQuizShallow(IEnumerable<QuizScore> quizScores, IEnumerable<Quiz> quizzes)
+        {
+            return from quizScore in quizScores
+                   join quiz in quizzes on quizScore.QuizId equals quiz.Id
+                   select new QuizViewModel().MergeInViewModelShallow(quizScore, quiz);
+        }
+
+        #endregion
+
         #region GET_UNFINISHED
 
         private async Task<List<Quiz>> GetQuizzesAsync(IEnumerable<int> quizzesId)
@@ -292,50 +356,169 @@ namespace DistantEdu.Services
             return quizzes;
         }
 
-        private IEnumerable<QuizViewModel> JoinOnQuiz(IEnumerable<QuizScore> quizScores, IEnumerable<Quiz> quizzes)
-        {
-            return from quizScore in quizScores
-                   join quiz in quizzes on quizScore.QuizId equals quiz.Id
-                   select new QuizViewModel
-                   {
-                       QuizId = quiz.Id,
-                       QuizScoreId = quizScore.Id,
-                       Name = quiz.Name,
-                       Description = quiz.Description,
-                       Count = quiz.Count,
-                       Duration = quiz.Duration,
-                       QType = quiz.QType,
-                       Score = quizScore.Score,
-                       EndTime = quizScore.EndTime,
-                       StartTime = quizScore.StartTime,
-                       Questions = (from queryScore in quizScore.queryReplieds
-                                    join query in quiz.Questions on queryScore.QueryId equals query.Id
-                                    select new QuestionViewModel
-                                    {
-                                        QueryId = query.Id,
-                                        QueryScoreId = queryScore.Id,
-                                        Content = query.Content,
-                                        IsCorrect = queryScore.isCorrect,
-                                        IsReplied = queryScore.isReplied,
-                                        Replies = (from replied in queryScore.Answers
-                                                   join reply in query.Replies on replied.ReplyId equals reply.Id
-                                                   select new ReplyViewModel
-                                                   {
-                                                       ReplyId = reply.Id,
-                                                       RepliedId = replied.Id,
-                                                       Content = reply.Content,
-                                                       IsSelected = replied.IsSelected,
-                                                   }).ToList()
-                                    }).ToList()
-                   };
-        }
-
         public async Task<List<QuizViewModel>> GetUnfinishedShallowQuizedById(List<QuizScore> quizScoresList)
         {
             var quizzesList = await GetQuizzesAsync(from quizScore in quizScoresList select quizScore.QuizId);
-            return JoinOnQuiz(quizScoresList, quizzesList).ToList();
+            return JoinOnQuizShallow(quizScoresList, quizzesList).ToList();
+        }
+
+        #endregion
+
+        #region FINISH_QUIZ
+
+        private double GetScore(Query query, QueryReplied queryReplied)
+        {
+            int matches = 0;
+
+            foreach (Replied replied in queryReplied.Answers)
+            {
+                var reply = query.Replies.First(repl => repl.Id == replied.ReplyId);
+                if (reply.isCorrect == replied.IsSelected)
+                    matches++;
+            }
+
+            return matches / query.Count;
+        }
+        private CorrectGrades GetCorrectGrade(bool isStrict, in double score)
+            => score switch
+            {
+                _ when score == 0 || (isStrict && score < 1) => CorrectGrades.Wrong,
+                _ when score == 1 => CorrectGrades.Correct,
+                _ => CorrectGrades.PartiallyCorrect,
+            };
+
+        // 
+        private void CalculateScore(QuizScore quizScore, Quiz quiz)
+        {
+            // a value with range of [0; quiz.Count]
+            double score = default;
+            bool isStrict = quiz.QType == QuizType.Hardcore || quiz.QType == QuizType.KeyHardcore;
+
+            foreach (var questionReplied in quizScore.QueryReplieds)
+            {
+                if (!questionReplied.isReplied) {
+                    questionReplied.isReplied = true;
+                    questionReplied.isCorrect = CorrectGrades.Unreplied;
+                    continue;
+                }
+
+                var query = quiz.Questions.First(q => q.Id == questionReplied.QueryId);
+                var answerScore = GetScore(query, questionReplied);
+                score += isStrict ? Math.Floor(answerScore) : answerScore;
+                questionReplied.isCorrect = GetCorrectGrade(isStrict, in answerScore);
+            }
+
+            quizScore.Score = score;
+            quizScore.EndTime = DateTimeOffset.UtcNow;
+        }
+
+        private async Task<bool> SaveCalculatedQuizScore(QuizScore quizScore)
+        {
+            if (_context is not { } db)
+                throw new NullReferenceException(nameof(db));
+
+            db.QuizScores.Update(quizScore);
+            await db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<QuizViewModel?> FinishQuizAsync(int quizScoreId)
+        {
+            if (await GetScoreWrappedByLoggerByIdAsync(quizScoreId) is not { } quizScore)
+                return null;
+            if (await GetQuizWrappedByLoggerByIdAsync(quizScore.QuizId) is not { } quiz)
+                return null;
+
+            CalculateScore(quizScore, quiz);
+            _ = await SaveCalculatedQuizScore(quizScore);
+            return MergeInViewModelDeep(quizScore, quiz);
+        }
+
+        #endregion
+
+        #region REPLY
+
+        public async Task<bool> Reply(int quizScoreId, IEnumerable<AnswerMessage> answeres)
+        {
+            if (await GetScoreWrappedByLoggerByIdAsync(quizScoreId) is not { } quizScore)
+                return false;
+
+            foreach (var answer in answeres) 
+                Reply(answer, quizScore);
+
+            if (_context is not null)
+                await _context.SaveChangesAsync();
+
+            return true;
+        }
+        private void Reply(AnswerMessage answer, QuizScore quizScore)
+        {
+            if (quizScore.QueryReplieds.Find(qr => qr.Id == answer.QueryScoreId) is not { } query)
+                throw new NullReferenceException(nameof(query));
+            query.isReplied = true;
+            foreach (var selected in answer.SelectedRepliesId)
+                query.Answers.First(a => a.Id == selected).IsSelected = true;
         }
 
         #endregion
     }
+
+    #region EXTENSION
+    static class QuizVmExtension
+    {
+        /// <summary>
+        /// Extension method for performing shallow merging of Quiz and QuizScore in View Model.
+        /// </summary>
+        /// <param name="quizViewModel"></param>
+        /// <param name="quizScore"></param>
+        /// <param name="quiz"></param>
+        /// <returns></returns>
+        public static QuizViewModel MergeInViewModelShallow(this QuizViewModel quizViewModel, QuizScore quizScore, Quiz quiz)
+        {
+            quizViewModel.QuizId = quiz.Id;
+            quizViewModel.QuizScoreId = quizScore.Id;
+            quizViewModel.Name = quiz.Name;
+            quizViewModel.Description = quiz.Description;
+            quizViewModel.Count = quiz.Count;
+            quizViewModel.Duration = quiz.Duration;
+            quizViewModel.QType = quiz.QType;
+            quizViewModel.Score = quizScore.Score;
+            quizViewModel.EndTime = quizScore.EndTime;
+            quizViewModel.StartTime = quizScore.StartTime;
+            quizViewModel.Questions = new();
+            return quizViewModel;
+        }
+
+        /// <summary>
+        /// Extension method to add deep part of Quiz and QuizScore to QuizViewModel. Used for method chain internally. The deep part is Queries (Questions) and below.
+        /// </summary>
+        /// <param name="quizViewModel">View model on which action is performed</param>
+        /// <param name="quizScore">where replied questionsare extracted from</param>
+        /// <param name="quiz">where questions definitions are extracted from</param>
+        /// <returns>Deep merged View Model. NB: this method does not make shallow merge!</returns>
+        public static QuizViewModel ChainDeepMerging(this QuizViewModel quizViewModel, QuizScore quizScore, Quiz quiz)
+        {
+            quizViewModel.Questions = (from queryScore in quizScore.QueryReplieds
+                                       join query in quiz.Questions on queryScore.QueryId equals query.Id
+                                       select new QuestionViewModel
+                                       {
+                                           QueryId = query.Id,
+                                           QueryScoreId = queryScore.Id,
+                                           Content = query.Content,
+                                           IsCorrect = queryScore.isCorrect,
+                                           IsReplied = queryScore.isReplied,
+                                           Replies = (from replied in queryScore.Answers
+                                                      join reply in query.Replies on replied.ReplyId equals reply.Id
+                                                      select new ReplyViewModel
+                                                      {
+                                                          ReplyId = reply.Id,
+                                                          RepliedId = replied.Id,
+                                                          Content = reply.Content,
+                                                          IsSelected = replied.IsSelected,
+                                                      }).ToList()
+                                       }).ToList();
+            return quizViewModel;
+        }
+    }
+    #endregion
 }

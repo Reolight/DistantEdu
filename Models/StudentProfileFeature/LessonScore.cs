@@ -9,10 +9,12 @@ namespace DistantEdu.Models.StudentProfileFeature
 
         [ForeignKey(nameof(SubjectSubscription))]
         public int SubjectSubscriptionId { get; set; }
+        public virtual SubjectSubscription SubjectSubscription { get; set; }
 
         [ForeignKey(nameof(Lesson))]
         public int LessonId { get; set; }
-        public List<QuizScore> QuizScoresList { get; set; }
+        public virtual Lesson Lesson { get; set; }
+        public virtual List<QuizScore> QuizScoresList { get; set; }
         public bool IsPassed { get; set; }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace DistantEdu.ViewModels
+﻿using DistantEdu.Types;
+
+namespace DistantEdu.ViewModels
 {
     public class QuestionViewModel
     {
@@ -6,7 +8,7 @@
         public int QueryScoreId { get; set; }
         public string Content { get; set; }
         public bool IsReplied { get; set; }
-        public bool IsCorrect { get; set; }
+        public CorrectGrades IsCorrect { get; set; }
         public List<ReplyViewModel> Replies { get; set; }
     }
 }

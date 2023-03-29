@@ -34,6 +34,9 @@ namespace DistantEdu
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
 
+            builder.Services.AddTransient<LessonService>();
+            builder.Services.AddTransient<QuizService>();
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())

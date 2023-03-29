@@ -10,10 +10,12 @@ namespace DistantEdu.Models.StudentProfileFeature
         // unic per user
         [ForeignKey(nameof(LessonScore))]
         public int LessonScoreId { get; set; }
+        public virtual LessonScore LessonScore { get; set; }
         public int QuizId { get; set; }
-        public int Score { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-        public List<QueryReplied> queryReplieds { get; set; }
+        public virtual Quiz Quiz { get; set; }
+        public double Score { get; set; }
+        public DateTimeOffset StartTime { get; set; }
+        public DateTimeOffset? EndTime { get; set; }
+        public List<QueryReplied> QueryReplieds { get; set; }
     }
 }

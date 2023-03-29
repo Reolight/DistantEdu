@@ -8,16 +8,16 @@ namespace DistantEdu.ViewModels
     {
         public int QuizId { get; set; }
         public int QuizScoreId { get; set; }
-        public int Score { get; set; }
+        public double Score { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public TimeSpan Duration { get; set; }
 
         // Null means that quiz is not started yet
-        public DateTime? StartTime { get; set; }
+        public DateTimeOffset? StartTime { get; set; }
 
         // Null means that quiz is not completed
-        public DateTime? EndTime { get; set; }
+        public DateTimeOffset? EndTime { get; set; }
         public QuizType QType { get; set; }
         public int Count { get; set; }
 

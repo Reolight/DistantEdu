@@ -33,7 +33,7 @@ namespace DistantEdu.Controllers
             if (profile.SubjectSubscriptions.FirstOrDefault(sub => sub.SubjectId == subjectId) is not { }) 
                 return BadRequest("You not subscribed on required subject");
 
-            var lesson = _lessonService.GetLessonPerStudent(lessonId, userClaims.Subject.Name);
+            var lesson = _lessonService.GetLessonPerStudentAsync(lessonId, userClaims.Subject.Name);
             return Ok(lesson);
         }
 

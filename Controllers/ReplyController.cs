@@ -34,7 +34,7 @@ namespace DistantEdu.Controllers
             if (quizScore.StartTime + quiz.Duration > DateTimeOffset.UtcNow)
             {
                 _ = await _quizService.FinishQuizAsync(quizScoreId);
-                await _lessonService.DecideIfLessonPassed(quizScore.LessonScoreId);
+                await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);
                 return BadRequest(new { message = "replies rejected. Cause: time expired" });
             }
 

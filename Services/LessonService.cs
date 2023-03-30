@@ -22,9 +22,8 @@ namespace DistantEdu.Services
             _logger = logger;
         }
 
-        private async Task<LessonScore?> GetLessonScore(Lesson lesson, string userName)
-        {
-            
+        private async Task<LessonScore?> GetLessonScoreAsync(Lesson lesson, string userName)
+        {            
             var profile = await _context.StudentProfiles.FirstAsync(sp => sp.Name == userName);
             var lessonScore = profile.SubjectSubscriptions
                 .Where(ss => ss.SubjectId == lesson.SubjectId)
@@ -41,10 +40,10 @@ namespace DistantEdu.Services
             await _context.SaveChangesAsync();
             return lessonScore;
         }
-        public async Task<LessonViewModel?> GetLessonPerStudent(int lessonId, string userName)
+        public async Task<LessonViewModel?> GetLessonPerStudentAsync(int lessonId, string userName)
         {
             if (await _context.Lessons.FindAsync(lessonId) is not { } lesson || 
-                await GetLessonScore(lesson, userName) is not { } lessonScore) return null;
+                await GetLessonScoreAsync(lesson, userName) is not { } lessonScore) return null;
 
             return MergeInLessonViewModel(lesson, lessonScore);
         }
@@ -113,7 +112,7 @@ namespace DistantEdu.Services
         /// <param name="lessonScoreId">lesson score id for checking</param>
         /// <returns>True if requirements met</returns>
         /// <exception cref="NullReferenceException">If Lesson or LessonScore were not found</exception>
-        public async Task<bool> DecideIfLessonPassed(int lessonScoreId)
+        public async Task<bool> DecideIfLessonPassedAsync(int lessonScoreId)
         {
             if (await _context.LessonScores.FindAsync(lessonScoreId) is not { } lessonScore)
                 throw new NullReferenceException($"Lesson score with ID:{lessonScoreId} could not be found");

@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DistantEdu.Data;
 using DistantEdu.Models;
+using DistantEdu.Services;
 using DistantEdu.Models.SubjectFeature;
+using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -19,11 +21,16 @@ namespace DistantEdu.Controllers
         private readonly ILogger<SubjectController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        public SubjectController(ILogger<SubjectController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly LessonService _lessonService;
+        public SubjectController(ILogger<SubjectController> logger, 
+                                ApplicationDbContext context,
+                                UserManager<ApplicationUser> userManager,
+                                LessonService lessonService)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
+            _lessonService = lessonService;
         }
 
         [HttpGet]
@@ -61,6 +68,52 @@ namespace DistantEdu.Controllers
                             };
             
             return Ok(viewModels);
+        }
+
+        [HttpGet]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(204)]
+        [Route("{id}")]
+        public async Task<ActionResult<SubjectViewModel>> Get(int id)
+        {
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) 
+                return Unauthorized();
+
+            var subject = await _context.Subjects
+                .Include(s => s.Lessons)
+                .AsNoTracking()
+                .FirstAsync(s => s.Id == id);
+            
+            StudentProfile profile = await _context.StudentProfiles
+                .Include(profile => profile.SubjectSubscriptions)
+                .FirstOrDefaultAsync(sp => sp.Name == userClaims.Subject.Name)
+                ?? new StudentProfile{
+                    Name = userClaims.Subject.Name,
+                    SubjectSubscriptions = new()
+                };
+            
+            var subscription = profile.SubjectSubscriptions
+                .FirstOrDefault(ss => ss.SubjectId == id);
+
+            if (subscription is null) {
+                subscription = new SubjectSubscription{
+                    LessonScores = new(),
+                    SubjectId = id
+                };
+
+                profile.SubjectSubscriptions.Add(subscription);
+                subject.SubjectSubscription.Add(subscription);
+            }
+
+            await _context.SaveChangesAsync();
+
+            var subjVms = new SubjectViewModel(subject);
+            subjVms.Lessons = subject.Lessons.Select(lesson =>
+                    _lessonService.GetLessonPerStudentAsync(lesson.Id, profile.Name).Result)
+                .OfType<LessonViewModel>()
+                .ToList();
+
+            return Ok(subjVms);
         }
 
         [HttpPost]

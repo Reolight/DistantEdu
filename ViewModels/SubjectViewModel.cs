@@ -9,6 +9,7 @@ namespace DistantEdu.ViewModels
         public string Author { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public List<LessonViewModel> Lessons { get; set; } = new();
 
         public SubjectViewModel() { }
         public SubjectViewModel(Subject subject) {

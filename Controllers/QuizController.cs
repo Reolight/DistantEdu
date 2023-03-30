@@ -73,7 +73,7 @@ namespace DistantEdu.Controllers
             if (await _context.QuizScores.FindAsync(quizScoreId) is not { } quizScore)
                 return BadRequest(new { message = $"quiz with {quizScoreId} is not found" });
             _ = await _quizService.FinishQuizAsync(quizScoreId);
-            await _lessonService.DecideIfLessonPassed(quizScore.LessonScoreId);
+            await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);
             return Ok(new { message = "Finished", redirect = $"quiz\\{quizScoreId}" });
         }
     }

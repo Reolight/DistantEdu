@@ -28,28 +28,37 @@ namespace DistantEdu.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(string), 200)]
-        public async Task<ActionResult<IEnumerable<SubjectViewModel>>> Get(int page, int count)
+        public async Task<ActionResult> Get()
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } UserClaims) 
                 return Unauthorized();
+
+            // As this app is not intendet to use under huge load retrieving all subjects won't be hard load all subj
             var subjects = await _context.Subjects.AsNoTracking()
-                .Skip(page * count)
-                .Take(count)
                 .ToListAsync();
             if (subjects is not { }) 
-                return new List<SubjectViewModel>();
+                return Ok(new List<SubjectViewModel>());
+
             var subscriptions = _context.StudentProfiles
                 .AsNoTracking()
-                .Where(prof => prof.Name == UserClaims.Subject.Name)
                 .Include(prof => prof.SubjectSubscriptions)
+                .Where(prof => prof.Name == UserClaims.Subject.Name)
                 .AsNoTracking()
-                .SelectMany(prof => prof.SubjectSubscriptions);
+                .SelectMany(prof => prof.SubjectSubscriptions)
+                .ToList();
             
-            // well, there is nothing special in subject subscription itself; If exists, the we'll return VM
-            var viewModels = from subjectSubscription in subscriptions
-                            join subject in subjects 
-                            on subjectSubscription.SubjectId equals subject.Id
-                            select new SubjectViewModel(subject, true);
+            // well, there is nothing special in subject subscription itself, just saving Id from it
+            var viewModels = from subject in subjects
+                            join subjectSubscription in subscriptions 
+                            on subject.Id equals subjectSubscription.SubjectId into subjectViewModels
+                            from subjectVm in subjectViewModels.DefaultIfEmpty()
+                            select new SubjectViewModel{
+                                Id = subject.Id,
+                                SubscriptionId = subjectVm is null? null : subjectVm.Id,
+                                Name = subject.Name,
+                                Author = subject.Author,
+                                Description = subject.Description
+                            };
             
             return Ok(viewModels);
         }

@@ -35,7 +35,7 @@ export function Home() {
             setState({ Subjects: data, isLoading: false });
         }
         if (state.isLoading) loadSubjInfo()
-        else console.log(state)
+        else console.log(state, user)
     }, [state])
 
     function editChild(id) {
@@ -53,13 +53,14 @@ export function Home() {
                     {state.Subjects.map(subject => {
                         return <ListItem
                             key={subject.id}
+                            style={subject.subscriptionId > 0? {backgroundColor: "#cefad0"} : {backgroundColor: "#f6f6f6"}}
                             item={subject}
                             role={user.role}
                             editRole={TEACHER_ROLE}
                             removeRole={ADMIN_ROLE}
                             enterQuery={(id) => {
                                 const enteringdSub = state.Subjects.find(s => s.id === id);
-                                if ((!!!enteringdSub) || (!enteringdSub.issubscribed && !window.confirm(`You are not subscribed. Subscribe and enter?`))) {
+                                if ((!!!enteringdSub) || (!enteringdSub.subscriptionid && !window.confirm(`You are not subscribed. Subscribe and enter?`))) {
                                     console.log(!!!enteringdSub)
                                     return
                                 }

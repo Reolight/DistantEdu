@@ -3,13 +3,13 @@ import { Button, Typography, Card, CardActionArea, CardContent, CardActions } fr
 import { authenticate } from '../../roles';
 
 // props = {item, editRole, removeRole, userRole,
-//          editQuery, removeQuery }
+//          editQuery, removeQuery, style }
 
 export default function ListItem(props) {
 
     return (<Card key={props.item.id} >
         <CardActionArea>
-            <CardContent>
+            <CardContent style={props.style} >
                 <Typography gutterBottom variant="h5" component="div">
                     {props.item.name}
                 </Typography>

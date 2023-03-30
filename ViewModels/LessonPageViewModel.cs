@@ -10,14 +10,14 @@ namespace DistantEdu.ViewModels
         public int LessonScoreId { get;set;}
         public int SubscriptionId { get;set;}
         public int SubjectId { get;set;}
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public int Order { get; set; }
-        public string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
         public PassCondition Condition { get; set; }
         public bool IsPassed { get; set; }
                    
                    // Here selecting only full quizes
-        public List<QuizViewModel> Quizzes { get; set; }
+        public List<QuizViewModel> Quizzes { get; set; } = new();
     }
 }

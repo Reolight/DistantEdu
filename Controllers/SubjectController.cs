@@ -28,43 +28,30 @@ namespace DistantEdu.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(string), 200)]
-        public async Task<ActionResult<IEnumerable<SubjectViewModel>>> Get()
+        public async Task<ActionResult<IEnumerable<SubjectViewModel>>> Get(int page, int count)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } UserClaims) return Unauthorized();
-            var subjects = await _context.Subjects.Include(sub => sub.SubscribedUsers).ToListAsync();
-            if (subjects is not { }) return new List<SubjectViewModel>();
-            var viewModels = subjects.Select(sub => 
-                new SubjectViewModel(sub, sub.SubscribedUsers.Any(user => user.Name == UserClaims.Subject.Name)));
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } UserClaims) 
+                return Unauthorized();
+            var subjects = await _context.Subjects.AsNoTracking()
+                .Skip(page * count)
+                .Take(count)
+                .ToListAsync();
+            if (subjects is not { }) 
+                return new List<SubjectViewModel>();
+            var subscriptions = _context.StudentProfiles
+                .AsNoTracking()
+                .Where(prof => prof.Name == UserClaims.Subject.Name)
+                .Include(prof => prof.SubjectSubscriptions)
+                .AsNoTracking()
+                .SelectMany(prof => prof.SubjectSubscriptions);
+            
+            // well, there is nothing special in subject subscription itself; If exists, the we'll return VM
+            var viewModels = from subjectSubscription in subscriptions
+                            join subject in subjects 
+                            on subjectSubscription.SubjectId equals subject.Id
+                            select new SubjectViewModel(subject, true);
+            
             return Ok(viewModels);
-        }
-
-        [HttpGet]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(204)]
-        [Route("{id}")]
-        public async Task<ActionResult<SubjectViewModel>> Get(int id)
-        {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) return Unauthorized();
-            var subject = await _context.Subjects
-                .Include(s => s.Lessons)
-                .Include(s => s.SubscribedUsers)
-                .FirstAsync(s => s.Id == id);
-            if (!subject.SubscribedUsers.Any(user => user.Name == userClaims.Subject.Name)) {
-                var studProfile = await _context.StudentProfiles.FirstOrDefaultAsync(s => s.Name == userClaims.Subject.Name);
-                if (studProfile is not { } profile) { return Ok(subject); }
-
-                subject.SubscribedUsers.Add(profile);
-                profile.SubjectSubscriptions.Add(new Models.StudentProfileFeature.SubjectSubscription
-                {
-                    LessonScores = new(),
-                    SubjectId = subject.Id
-                });
-
-                _context.SaveChanges();
-            }
-
-            subject.Lessons.OrderBy(lesson => lesson.Order);
-            return Ok(subject);
         }
 
         [HttpPost]

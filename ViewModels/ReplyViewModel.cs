@@ -7,7 +7,7 @@
 
         // Id of replied instance
         public int RepliedId { get; set; }
-        public string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
         public bool IsSelected { get; set; }
     }
 }

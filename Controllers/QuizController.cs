@@ -32,21 +32,6 @@ namespace DistantEdu.Controllers
             _lessonService = lessonService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult> GetActiveQuiz()
-        {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims ||
-                await _context.StudentProfiles
-                    .AsNoTracking()
-                    .Include(st => st.UnfinishedQuizzes)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(sp => sp.Name == userClaims.Subject.Name) is not { } profile)
-                return Unauthorized();
-
-            var unfinishedQuizes = _quizService.GetUnfinishedShallowQuizedById(profile.UnfinishedQuizzes);
-            return unfinishedQuizes != null ? Ok(unfinishedQuizes) : Ok();
-        }
-
         [HttpPost]
         public async Task<ActionResult> PostNewQuiz(int lessonId, [FromBody] Quiz quiz)
         {

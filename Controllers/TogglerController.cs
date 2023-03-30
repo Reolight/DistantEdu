@@ -20,7 +20,7 @@ namespace DistantEdu.Controllers
 
         public class ToggleAction{
             public bool TeacherChecked { get; set; }
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
         }
 
         [Route("aezakmi")]

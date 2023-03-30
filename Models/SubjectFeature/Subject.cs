@@ -6,11 +6,11 @@ namespace DistantEdu.Models.SubjectFeature
     public class Subject
     {
         public int Id { get; set; }
-        public string Author { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Author { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public List<Lesson> Lessons { get; set; } = new List<Lesson>();
-        public List<StudentProfile> SubscribedUsers { get; set; } = new List<StudentProfile>();
+        public List<SubjectSubscription> SubjectSubscription { get; set; } = new();
 
         public Subject() { }
         public Subject(SubjectViewModel subjectViewModel)

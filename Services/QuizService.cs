@@ -15,7 +15,7 @@ namespace DistantEdu.Services
         private readonly ApplicationDbContext? _context;
         private readonly ILogger<QuizService> _logger;
         public QuizService() { }
-        public QuizService(ApplicationDbContext context, ILogger<QuizService> logger, LessonService lessonService)
+        public QuizService(ApplicationDbContext context, ILogger<QuizService> logger)
         {
             _context = context;
             _logger = logger;

@@ -66,7 +66,7 @@ export default function SubjectView() {
                                     return
                                 }
 
-                                navigate(`/lesson/${enteringdLesson.lessonId}`)
+                                navigate(`/lesson/${enteringdLesson.subjectId}-${enteringdLesson.order}-${state.subject.lessons.length}`)
                             }}
                             
                             editQuery={(id) => console.log(`I won't edit ${id}. Get lost`)}

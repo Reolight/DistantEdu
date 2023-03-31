@@ -27,7 +27,7 @@ const AppRoutes = [
         element: <Aezakmi />
     },
     {
-      path: '/lesson/:id',
+      path: '/lesson/:params',
       requireAuth: true,
       element: <LessonView />
     },

@@ -24,21 +24,18 @@ namespace DistantEdu.Controllers
 
         [HttpGet]
         [ProducesResponseType(200)]
-        [Route("{lessonId}")]
-        public async Task<ActionResult<LessonViewModel?>> GetLesson(int lessonId)
+        public async Task<ActionResult<LessonViewModel?>> GetLesson(int subjectId, int order)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
-            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson)
-                return NotFound();
             if (!_context.StudentProfiles
                 .Include(sp => sp.SubjectSubscriptions).Any(sp => sp.Name == userClaims.Subject.Name &&
-                    sp.SubjectSubscriptions.Any(ss => ss.SubjectId == lesson.SubjectId)))
+                    sp.SubjectSubscriptions.Any(ss => ss.SubjectId == subjectId)))
             {
                 return NotFound("Subject subscription not found");
             }
 
-            var lessonViewModel = await _lessonService.GetLessonAsync(lessonId, userClaims.Subject.Name);
+            var lessonViewModel = await _lessonService.GetLessonByOrderAsync(subjectId, order, userClaims.Subject.Name);
             return Ok(lessonViewModel);
         }
 
@@ -75,7 +72,7 @@ namespace DistantEdu.Controllers
             {
                 await _context.SaveChangesAsync();
                 return NoContent();
-            } 
+            }
 
             return BadRequest("Lessow was not deleted because it hadn't exist.");
         }

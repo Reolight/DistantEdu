@@ -57,6 +57,16 @@ namespace DistantEdu.Services
             return (lesson, lessonScore);
         }
 
+        private async Task<(Lesson, LessonScore)?> GetLessonAndScoreAsync(int subjectId, int order, string userName){
+            if (await _context.Lessons.FirstOrDefaultAsync(l => l.SubjectId == subjectId && l.Order == order) is not { } lesson ||
+                await GetLessonScoreAsync(lesson, userName) is not { } lessonScore)
+            {
+                return null;
+            }
+
+            return (lesson, lessonScore);
+        }
+
         /// <summary>
         /// Retrieves deep lesson by assigning content and quiz array
         /// </summary>
@@ -70,6 +80,11 @@ namespace DistantEdu.Services
             return MergeInLessonViewModel(lessonInfo.Item1, lessonInfo.Item2);
         }
 
+        public async Task<LessonViewModel?> GetLessonByOrderAsync(int subjectId, int order, string userName){
+            if (await GetLessonAndScoreAsync(subjectId, order, userName) is not { } lessonInfo)
+                return null;
+            return MergeInLessonViewModel(lessonInfo.Item1, lessonInfo.Item2);
+        }
         /// <summary>
         /// Retrieves shallow lesson information just to display it in list of lessons.
         /// </summary>

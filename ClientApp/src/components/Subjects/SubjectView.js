@@ -4,6 +4,7 @@ import { ADMIN_ROLE, authenticate, STUDENT_ROLE, TEACHER_ROLE } from '../../role
 import authService from '../api-authorization/AuthorizeService';
 import { Button } from "@mui/material";
 import ListItem from '../Common/ListItem';
+import { Get } from '../Common/fetcher';
 
 export default function SubjectView() {
     const { id } = useParams();
@@ -26,14 +27,7 @@ export default function SubjectView() {
 
     useEffect(() => {
         async function loadSubjInfo(id) {
-            console.log(id)
-            const token = await authService.getAccessToken();
-            const response = await fetch(`subject/${id}`, {
-                headers: !token ? {} : { 'Authorization': `Bearer ${token}` }
-            });
-
-            const data = await response.json();
-            console.log(data)
+            const data = await Get(`subject/${id}`)
             setState({ subject: data, isLoading: false });
         }
         if (!!state && state.isLoading && id !== undefined)
@@ -52,7 +46,7 @@ export default function SubjectView() {
             <p>{state.subject.description}</p>
             
             {!pageState.editMode && (<>
-            <p>
+            <div>
                 {state.subject.lessons.map(lesson => {
                         return <ListItem
                             key={lesson.id}
@@ -73,8 +67,8 @@ export default function SubjectView() {
                             removeQuery={(id) => console.log(`remove was pressed but nothing happened)))`)}
                         />
                     })}
-            </p>
-            {authenticate(user.role, TEACHER_ROLE) && (<p>
+            </div>
+            {authenticate(user.role, TEACHER_ROLE) && (<div>
                 <Button
                     variant='outlined'
                     color="secondary"
@@ -85,7 +79,7 @@ export default function SubjectView() {
                         setPageState({ editMode: true })
                     }}
                 >Add</Button>
-            </p>)}
+            </div>)}
             </>)}
         </div>
     )

@@ -4,6 +4,7 @@ import TextField from '@mui/material/TextField';
 import { Stack } from "@mui/system";
 import { Button } from "@mui/material";
 import authService from '../api-authorization/AuthorizeService';
+import { Post, Put } from '../Common/fetcher';
 
 // props is edited subject or undefined + name of teacher
 
@@ -30,24 +31,8 @@ export default function SubjectNew(props) {
 
     async function FetchSubject(e) {
         e.preventDefault();
-        const token = await authService.getAccessToken();
-        const auth = !token ? {} : { 'Authorization': `Bearer ${token}` }
-        console.log({ 'Content-type': 'application/json', ...auth })
-        const address = state.isNew ? 'subject' : `subject/${state.subject.id}`
-        const response = await fetch(address, {
-            headers: { 'Content-type': 'application/json', ...auth },
-            method: state.isNew ? "POST" : "PUT",
-            body: JSON.stringify(state.subject)
-        });
-
-        console.log(response.json())
-        if (response.ok) {
-            alert('Saved');
-            props.onDone();
-        }
-        else {
-            alert(response.status)
-        }
+        state.isNew? await Post('subject', state.subject, props.onDone)
+                   : await Put(`subject/${state.subject.id}`, state.subject, props.onDone)
     }
 
     if (state.subject === undefined) return <i>Loading...</i>
@@ -104,11 +89,11 @@ export default function SubjectNew(props) {
 
     function validateName() {
         const subjName = state.subject.name;
-        return subjName.length <= 3 || subjName.length > 24 || regex.test(subjName)
+        return subjName.length <= 3 || subjName.length > 30 || regex.test(subjName)
     }
 
     function validateDesc() {
         const description = state.subject.description
-        return description.length <= 40
+        return description.length <= 40 || description.length > 220
     }
 }

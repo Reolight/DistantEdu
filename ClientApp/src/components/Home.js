@@ -6,6 +6,7 @@ import {  Route, Routes, useNavigate } from 'react-router-dom';
 import ListItem from './Common/ListItem';
 import { adminRole, ADMIN_ROLE, authenticate, studentRole, teacherRole, TEACHER_ROLE } from '../roles';
 import SubjectView from './Subjects/SubjectView';
+import { Get } from './Common/fetcher';
 
 export function Home() {
     const [pageState, setPageState] = useState({ showList: true, editMode: false, editableSub: undefined })
@@ -26,12 +27,7 @@ export function Home() {
 
     useEffect(() => {
         async function loadSubjInfo() {
-            const token = await authService.getAccessToken();
-            const response = await fetch('subject', {
-                headers: !token ? {} : { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            console.log(data)
+            const data = await Get('subject')
             setState({ Subjects: data, isLoading: false });
         }
         if (state.isLoading) loadSubjInfo()

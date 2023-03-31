@@ -16,8 +16,8 @@ namespace DistantEdu.ViewModels
         public string Content { get; set; } = string.Empty;
         public PassCondition Condition { get; set; }
         public bool IsPassed { get; set; }
-                   
-                   // Here selecting only full quizes
+
+        // Here selecting only full quizes
         public List<QuizViewModel> Quizzes { get; set; } = new();
     }
 }

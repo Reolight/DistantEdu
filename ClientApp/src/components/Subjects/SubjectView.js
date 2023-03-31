@@ -49,20 +49,26 @@ export default function SubjectView() {
             <div>
                 {state.subject.lessons.map(lesson => {
                         return <ListItem
-                            key={lesson.id}
-                            item={lesson}
+                            key={lesson.lessonId}
+                            item={{
+                                id: lesson.lessonId,
+                                name: lesson.name,
+                                description: lesson.description
+                            }}
                             role={user.role}
                             editRole={TEACHER_ROLE}
                             removeRole={TEACHER_ROLE}
                             enterQuery={(id) => {
-                                const enteringdLesson = state.subject.lessons.find(s => s.id === id);
+                                const enteringdLesson = state.subject.lessons.find(l => l.lessonId === id);
+                                console.log(`enter Id: ${id}, entering lesson found: `, enteringdLesson)
                                 if (!!!enteringdLesson) {
                                     console.log(!!!enteringdLesson)
                                     return
                                 }
 
-                                navigate(`/lesson/${enteringdLesson.id}`)
-                            } }
+                                navigate(`/lesson/${enteringdLesson.lessonId}`)
+                            }}
+                            
                             editQuery={(id) => console.log(`I won't edit ${id}. Get lost`)}
                             removeQuery={(id) => console.log(`remove was pressed but nothing happened)))`)}
                         />

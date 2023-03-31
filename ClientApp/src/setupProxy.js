@@ -13,7 +13,8 @@ const context = [
   "/ApplyDatabaseMigrations",
     "/_framework",
     "/subject",
-    "/Toggler"
+    "/Toggler",
+    "/lesson"
 ];
 
 const onError = (err, req, resp, target) => {

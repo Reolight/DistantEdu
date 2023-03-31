@@ -23,33 +23,82 @@ namespace DistantEdu.Services
         }
 
         private async Task<LessonScore?> GetLessonScoreAsync(Lesson lesson, string userName)
-        {            
-            var profile = await _context.StudentProfiles.FirstAsync(sp => sp.Name == userName);
+        {
+            var profile = await _context.StudentProfiles
+                .Include(sp => sp.SubjectSubscriptions)
+                .FirstAsync(sp => sp.Name == userName);
             var lessonScore = profile.SubjectSubscriptions
                 .Where(ss => ss.SubjectId == lesson.SubjectId)
                 .SelectMany(ss => ss.LessonScores)
-                .FirstOrDefault(lessonScore => lessonScore.LessonId == lesson.Id) ??
-                new LessonScore
-                {
-                    LessonId = lesson.Id,
-                    IsPassed = false,
-                    QuizScoresList = new List<QuizScore>(),
-                    SubjectSubscriptionId = profile.SubjectSubscriptions.First(ss => ss.SubjectId == lesson.SubjectId).Id
-                };
+                .FirstOrDefault(lessonScore => lessonScore.LessonId == lesson.Id);
 
+            if (lessonScore is not null)
+                return lessonScore;
+            lessonScore = new LessonScore
+            {
+                LessonId = lesson.Id,
+                IsPassed = false,
+                QuizScoresList = new List<QuizScore>(),
+                SubjectSubscriptionId = profile.SubjectSubscriptions.First(ss => ss.SubjectId == lesson.SubjectId).Id
+            };
+
+            _context.Entry(lessonScore).State = EntityState.Added;
             await _context.SaveChangesAsync();
             return lessonScore;
         }
-        public async Task<LessonViewModel?> GetLessonPerStudentAsync(int lessonId, string userName)
-        {
-            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson || 
-                await GetLessonScoreAsync(lesson, userName) is not { } lessonScore) return null;
 
-            return MergeInLessonViewModel(lesson, lessonScore);
+        private async Task<(Lesson, LessonScore)?> GetLessonAndScoreAsync(int lessonId, string userName){
+            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson ||
+                await GetLessonScoreAsync(lesson, userName) is not { } lessonScore)
+            {
+                return null;
+            }
+
+            return (lesson, lessonScore);
         }
 
+        /// <summary>
+        /// Retrieves deep lesson by assigning content and quiz array
+        /// </summary>
+        /// <param name="lessonId">Lesson Id to retrieve</param>
+        /// <param name="userName">User name for retrieve personal information about lesson</param>
+        /// <returns>Deep lesson view model with Content and Quizzes initialized. Used for LessonView component.</returns>
+        public async Task<LessonViewModel?> GetLessonAsync(int lessonId, string userName)
+        {
+            if (await GetLessonAndScoreAsync(lessonId, userName) is not { } lessonInfo)
+                return null;
+            return MergeInLessonViewModel(lessonInfo.Item1, lessonInfo.Item2);
+        }
+
+        /// <summary>
+        /// Retrieves shallow lesson information just to display it in list of lessons.
+        /// </summary>
+        /// <param name="lessonId">Lesson Id to retrieve</param>
+        /// <param name="userName">User name for retrieve personal information about lesson</param>
+        /// <returns>Shallow lesson view model without Content property (string.Empty by default) and Quizzes initialized 
+        /// as empty collection. Used for displaying in list of lessons </returns>
+        public async Task<LessonViewModel?> GetShallowLessonAsync(int lessonId, string userName){
+            if (await GetLessonAndScoreAsync(lessonId, userName) is not { } lessonInfo)
+                return null;
+            return MergeInShallowLessonViewModel(lessonInfo.Item1, lessonInfo.Item2);
+        }
+
+        private static LessonViewModel MergeInShallowLessonViewModel(Lesson lesson, LessonScore lessonScore)
+            => new(){
+                LessonId = lesson.Id,
+                LessonScoreId = lessonScore.Id,
+                Name = lesson.Name,
+                Description = lesson.Description,
+                Order = lesson.Order,
+                Condition = lesson.Condition,
+                SubjectId = lesson.SubjectId,
+                SubscriptionId = lessonScore.SubjectSubscriptionId,
+                IsPassed = lessonScore.IsPassed,
+                Quizzes = new()
+            };
+
         private LessonViewModel MergeInLessonViewModel(Lesson lesson, LessonScore lessonScore)
-            => new LessonViewModel
+            => new()
             {
                 LessonId = lesson.Id,
                 LessonScoreId = lessonScore.Id,
@@ -75,19 +124,19 @@ namespace DistantEdu.Services
 
         #region IS_PASSED
 
-        private bool CheckPassed(IEnumerable<Quiz> quizzes, LessonScore lessonScore)
+        private static bool CheckPassed(IEnumerable<Quiz> quizzes, LessonScore lessonScore)
         {
             bool Passed = true;
             foreach (var quiz in quizzes)
             {
-                Passed &= lessonScore.QuizScoresList.Where(qs => qs.QuizId == quiz.Id && qs.Score > 0).Any();
+                Passed &= lessonScore.QuizScoresList.Any(qs => qs.QuizId == quiz.Id && qs.Score > 0);
                 if (!Passed) break;
             }
 
             return Passed;
         }
 
-        private bool IsPassed(PassCondition condition, Lesson lesson, LessonScore lessonScore)
+        private static bool IsPassed(PassCondition condition, Lesson lesson, LessonScore lessonScore)
         {
             switch (condition)
             {

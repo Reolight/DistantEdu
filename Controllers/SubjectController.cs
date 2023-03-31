@@ -37,7 +37,7 @@ namespace DistantEdu.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public async Task<ActionResult> Get()
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } UserClaims) 
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } UserClaims) 
                 return Unauthorized();
 
             // As this app is not intendet to use under huge load retrieving all subjects won't be hard load all subj
@@ -61,12 +61,12 @@ namespace DistantEdu.Controllers
                             from subjectVm in subjectViewModels.DefaultIfEmpty()
                             select new SubjectViewModel{
                                 Id = subject.Id,
-                                SubscriptionId = subjectVm is null? null : subjectVm.Id,
+                                SubscriptionId = subjectVm?.Id,
                                 Name = subject.Name,
                                 Author = subject.Author,
                                 Description = subject.Description
                             };
-            
+
             return Ok(viewModels);
         }
 
@@ -76,14 +76,14 @@ namespace DistantEdu.Controllers
         [Route("{id}")]
         public async Task<ActionResult<SubjectViewModel>> Get(int id)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) 
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
 
             var subject = await _context.Subjects
                 .Include(s => s.Lessons)
                 .AsNoTracking()
                 .FirstAsync(s => s.Id == id);
-            
+
             StudentProfile profile = await _context.StudentProfiles
                 .Include(profile => profile.SubjectSubscriptions)
                 .FirstOrDefaultAsync(sp => sp.Name == userClaims.Subject.Name)
@@ -91,9 +91,8 @@ namespace DistantEdu.Controllers
                     Name = userClaims.Subject.Name,
                     SubjectSubscriptions = new()
                 };
-            
-            var subscription = profile.SubjectSubscriptions
-                .FirstOrDefault(ss => ss.SubjectId == id);
+
+            var subscription = profile.SubjectSubscriptions.Find(ss => ss.SubjectId == id);
 
             if (subscription is null) {
                 subscription = new SubjectSubscription{
@@ -107,11 +106,13 @@ namespace DistantEdu.Controllers
 
             await _context.SaveChangesAsync();
 
-            var subjVms = new SubjectViewModel(subject);
-            subjVms.Lessons = subject.Lessons.Select(lesson =>
-                    _lessonService.GetLessonPerStudentAsync(lesson.Id, profile.Name).Result)
-                .OfType<LessonViewModel>()
-                .ToList();
+            var subjVms = new SubjectViewModel(subject)
+            {
+                Lessons = subject.Lessons.Select(lesson =>
+                    _lessonService.GetShallowLessonAsync(lesson.Id, profile.Name).Result)
+                        .OfType<LessonViewModel>()
+                        .ToList()
+            };
 
             return Ok(subjVms);
         }
@@ -121,7 +122,7 @@ namespace DistantEdu.Controllers
         [ProducesResponseType(204)]
         public async Task<IActionResult> Post([FromBody] SubjectViewModel subjectVm)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } AuthorClaims) return NoContent();
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } AuthorClaims) return NoContent();
             subjectVm.Author = AuthorClaims.Subject.Name;
             var subject = new Subject(subjectVm);
             await _context.Subjects.AddAsync(subject);
@@ -132,7 +133,7 @@ namespace DistantEdu.Controllers
         [HttpPut]
         [ProducesResponseType(200)]
         [Route("{id}")]
-        public async Task<ActionResult> Put(int id, [FromBody] SubjectViewModel subject)
+        public async Task<ActionResult> Put([FromBody] SubjectViewModel subject)
         {
             var subjectOrig = await _context.Subjects.FirstOrDefaultAsync(x => x.Id == subject.Id);
             if (subjectOrig is null) return BadRequest();

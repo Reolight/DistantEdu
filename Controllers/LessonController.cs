@@ -1,6 +1,7 @@
 ﻿using DistantEdu.Data;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
+using DistantEdu.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,25 +23,29 @@ namespace DistantEdu.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetLesson(int subjectId, int lessonId)
+        [ProducesResponseType(200)]
+        [Route("{lessonId}")]
+        public async Task<ActionResult<LessonViewModel?>> GetLesson(int lessonId)
         {
-
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
-            var subject = await _context.Subjects.FindAsync(subjectId);
-            if (await _context.StudentProfiles.Include(p => p.SubjectSubscriptions).FirstOrDefaultAsync(profile => profile.Name == userClaims.Subject.Name) is not { } profile)
-                return BadRequest("There is no student profile");
-            if (profile.SubjectSubscriptions.FirstOrDefault(sub => sub.SubjectId == subjectId) is not { }) 
-                return BadRequest("You not subscribed on required subject");
+            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson)
+                return NotFound();
+            if (!_context.StudentProfiles
+                .Include(sp => sp.SubjectSubscriptions).Any(sp => sp.Name == userClaims.Subject.Name &&
+                    sp.SubjectSubscriptions.Any(ss => ss.SubjectId == lesson.SubjectId)))
+            {
+                return NotFound("Subject subscription not found");
+            }
 
-            var lesson = _lessonService.GetLessonPerStudentAsync(lessonId, userClaims.Subject.Name);
-            return Ok(lesson);
+            var lessonViewModel = await _lessonService.GetLessonAsync(lessonId, userClaims.Subject.Name);
+            return Ok(lessonViewModel);
         }
 
         [HttpPost]
         public async Task<ActionResult> PostLesson(int subjectId, [FromBody] Lesson lesson)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims) 
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
             if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
                 return BadRequest("Subject with given id not found");
@@ -50,9 +55,9 @@ namespace DistantEdu.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult> UpdateLesson(int subjectId, [FromBody] Lesson lesson)
+        public async Task<ActionResult> UpdateLesson([FromBody] Lesson lesson)
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
             _context.Entry(lesson).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -62,7 +67,7 @@ namespace DistantEdu.Controllers
         [HttpDelete]
         public async Task<ActionResult> DeleteLesson(int subjectId, int lessonId) 
         {
-            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject: { Name: { } } } userClaims)
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
             if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
                 return BadRequest("Subject with given id not found");

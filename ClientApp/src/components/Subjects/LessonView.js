@@ -1,6 +1,7 @@
 import { style } from "@mui/system";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Get } from "../Common/fetcher";
 import ListItem from "../Common/ListItem";
 
 // props = lesson.id, user
@@ -11,14 +12,7 @@ export default function LessonView(props){
 
     useEffect(() => {
         async function loadLesson(){
-            console.log(id)
-            const token = await authService.getAccessToken();
-            const response = await fetch(`lesson/${id}`, {
-                headers: !token ? {} : { 'Authorization': `Bearer ${token}` }
-            });
-
-            const data = await response.json();
-            console.log(data)
+            const data = await Get(`lesson/${id}`)
             setState({ lesson: data, isLoading: false });
         }
 
@@ -26,6 +20,8 @@ export default function LessonView(props){
             loadLesson()
     }, [state, id])
 
+    if (state.isLoading || !state.lesson)
+        return <p><i>Loading....</i></p>
     return (<>
     <div>
         <h2>{state.lesson.order}. {state.lesson.name}</h2>

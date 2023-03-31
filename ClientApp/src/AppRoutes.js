@@ -3,6 +3,7 @@ import ApiAuthorzationRoutes from './components/api-authorization/ApiAuthorizati
 import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
+import LessonView from './components/Subjects/LessonView';
 import SubjectView from './components/Subjects/SubjectView';
 
 const AppRoutes = [
@@ -24,6 +25,11 @@ const AppRoutes = [
         path: '/aezakmi',
         requireAuth: true,
         element: <Aezakmi />
+    },
+    {
+      path: '/lesson/:id',
+      requireAuth: true,
+      element: <LessonView />
     },
   ...ApiAuthorzationRoutes
 ];

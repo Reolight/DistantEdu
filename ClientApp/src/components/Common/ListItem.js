@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+﻿import React, { useEffect, useState } from 'react'
 import { Button, Typography, Card, CardActionArea, CardContent, CardActions } from "@mui/material";
 import { authenticate } from '../../roles';
 
@@ -6,6 +6,7 @@ import { authenticate } from '../../roles';
 //          userRole, editQuery, removeQuery, style }
 
 export default function ListItem(props) {
+    // useEffect(() => console.log("List item received props: ", props),[props])
 
     return (<Card key={props.item.id} >
         <CardActionArea>

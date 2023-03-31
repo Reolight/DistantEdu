@@ -5,13 +5,14 @@ import authService from '../api-authorization/AuthorizeService';
 import { Button } from "@mui/material";
 import ListItem from '../Common/ListItem';
 import { Get } from '../Common/fetcher';
+import LessonNew from './LessonNew';
 
 export default function SubjectView() {
     const { id } = useParams();
     const [ state, setState ] = useState({ subject: undefined, isLoading: true })
     const navigate = useNavigate();
 
-    const [pageState, setPageState] = useState({ editMode: false, editedInstance: undefined })
+    const [pageState, setPageState] = useState({ editMode: false, editable: undefined })
     const [user, setUser] = useState(0)
 
     useEffect(() => {
@@ -35,17 +36,25 @@ export default function SubjectView() {
         else console.log(state)
     }, [id])
 
+    function editChild(id) {
+        var lessonEditable = state.subject.lessons.find(l => l.lessonId === id)
+        if (lessonEditable !== undefined)
+            setPageState({ editMode: true, editable: lessonEditable })
+    }
+
     if (state.isLoading) return <i>Loading...</i>
     if (state.subject === undefined) return <i><strong>Subject doesn't exist</strong></i>
 
+
     return (
         <div>
+            {!pageState.editMode && (<>
+            
             <h2>{state.subject.name}</h2>
             <p><i>Author: {state.subject.author}</i></p>
 
             <p>{state.subject.description}</p>
             
-            {!pageState.editMode && (<>
             <div>
                 {state.subject.lessons.map(lesson => {
                         return <ListItem
@@ -69,12 +78,13 @@ export default function SubjectView() {
                                 navigate(`/lesson/${enteringdLesson.subjectId}-${enteringdLesson.order}-${state.subject.lessons.length}`)
                             }}
                             
-                            editQuery={(id) => console.log(`I won't edit ${id}. Get lost`)}
+                            editQuery={ editChild }
                             removeQuery={(id) => console.log(`remove was pressed but nothing happened)))`)}
                         />
                     })}
             </div>
-            {authenticate(user.role, TEACHER_ROLE) && (<div>
+
+            {!pageState.editMode && authenticate(user.role, TEACHER_ROLE) && (<div>
                 <Button
                     variant='outlined'
                     color="secondary"
@@ -86,7 +96,15 @@ export default function SubjectView() {
                     }}
                 >Add</Button>
             </div>)}
+
             </>)}
+            
+            {pageState.editMode && <LessonNew
+                onDone={() => setPageState({ editMode: false, editable: undefined })}
+                lesson={pageState.editable}
+                order={state.subject.lessons.length}
+                subjectId={state.subject.id}                    
+            />}
         </div>
     )
 }

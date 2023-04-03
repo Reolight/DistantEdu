@@ -1,16 +1,32 @@
 import { style } from "@mui/system";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Get } from "../Common/fetcher";
+import { Get, Patch } from "../Common/fetcher";
 import ListItem from "../Common/ListItem";
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, TextField } from "@mui/material";
+import { TEACHER_ROLE, authenticate } from "../../roles";
+import authService from "../api-authorization/AuthorizeService";
 
 // params: [subjectId]-[order]-[count]
 
 export default function LessonView(props){
     const { params } = useParams()
-    const [state, setState] = useState({lesson: undefined, isLoading: true, p: []})
     const navigate = useNavigate()
+
+    const [state, setState] = useState({lesson: undefined, isLoading: true, p: []})
+    const [contentEdit, setContentEdit] = useState(false)
+    const [user, setUser] = useState(0)
+
+    useEffect(() => {
+        async function loadUser() {
+            const u = await authService.getUser()
+            setUser(u)
+        }
+
+        if (user === 0)
+            loadUser()
+        console.log(user)
+    })
 
     useEffect(() => {
         async function loadLesson(){
@@ -40,10 +56,44 @@ export default function LessonView(props){
         <h2>{state.lesson.order + 1}. {state.lesson.name}</h2>
         <p><i>{state.lesson.condition}</i></p>
         <>
-            {state.lesson.content}
+            {authenticate(user.role, TEACHER_ROLE) && <>
+            {!contentEdit?
+                <Stack direction={'column'} >
+                    {state.lesson.content}
+                    <Button color='primary' onClick={ () => setContentEdit(true)
+                        }>Edit</Button>
+                </Stack>
+                :
+                <Stack direction={"column"} >
+                    <TextField
+                        multiline fullWidth
+                        value={state.lesson.content}
+                        type="text"
+                        variant="outlined"
+                        color="primary"
+                        label="Content"
+                        onChange={(e) => {
+                            setState({
+                                ...state,
+                                lesson: {
+                                    ...state.lesson,
+                                    content: e.target.value
+                                }
+                            })
+                        }}
+                    />
+                    <Button color='primary' onClick={ () => {
+                        Patch(`lesson?lessonId=${state.lesson.lessonId}`, 
+                        { content: state.lesson.content },
+                        () => setContentEdit(false))
+                    }}>Save</Button>
+                </Stack>
+            }</>}
         </>
+
         <br/>
-        {state.lesson.quizzes.map((quiz, i, quizzes) => {
+        
+        {state.lesson.quizzes.map((quiz) => {
             <ListItem
                 item={{
                     id: quiz.id, 
@@ -69,6 +119,7 @@ export default function LessonView(props){
                 }                
             />
         })}
+        {authenticate(user.role, TEACHER_ROLE) && <Button color='primary'>Add</Button>}
 
         <Stack direction={'row'} justifyContent={'space-between'} >
             <Button color='primary' disabled={state.p[1] === 0} onClick={ prev }>

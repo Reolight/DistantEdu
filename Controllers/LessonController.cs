@@ -1,4 +1,5 @@
 ﻿using DistantEdu.Data;
+using DistantEdu.MessageObject;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
 using DistantEdu.ViewModels;
@@ -40,12 +41,13 @@ namespace DistantEdu.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostLesson(int subjectId, [FromBody] Lesson lesson)
+        public async Task<ActionResult> PostLesson(int subjectId, [FromBody] LessonMessage lessonMessage)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
             if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
                 return BadRequest("Subject with given id not found");
+            Lesson lesson = new(lessonMessage);
             subject.Lessons.Add(lesson);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(PostLesson), lesson);
@@ -56,9 +58,24 @@ namespace DistantEdu.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
-            _context.Entry(lesson).State = EntityState.Modified;
+            if (await _context.Lessons.FindAsync(lesson.Id) is not { } dbLesson)
+                return NotFound($"Lesson with {lesson.Id} not found");
+            dbLesson.Condition = lesson.Condition;
+            dbLesson.Name = lesson.Name;
+            dbLesson.Description = lesson.Description;
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpPatch]
+        public async Task<ActionResult> UpdateContent(int lessonId, [FromBody] string content){
+            if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
+                return Unauthorized();
+            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson)
+                return NotFound($"Lesson with {lessonId} not found");
+            lesson.Content = content;
+            await _context.SaveChangesAsync();
+            return Ok("Content added");
         }
 
         [HttpDelete]

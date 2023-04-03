@@ -3,7 +3,7 @@ import ApiAuthorzationRoutes from './components/api-authorization/ApiAuthorizati
 import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
-import LessonView from './components/Subjects/LessonView';
+import LessonView from './components/Lessons/LessonView';
 import SubjectView from './components/Subjects/SubjectView';
 
 const AppRoutes = [

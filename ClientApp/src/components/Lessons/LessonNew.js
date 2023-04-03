@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
 import { Stack } from "@mui/system";
 import { Button, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import authService from '../api-authorization/AuthorizeService';
 import { Post, Put } from '../Common/fetcher';
 
 // props = subjectId, order, onDone. It may be `lesson` itself
@@ -11,6 +9,8 @@ import { Post, Put } from '../Common/fetcher';
 export default function LessonNew(props) {
     const [state, setState] = useState({ lesson: undefined, isReady: false, isNew: false })
     const regex = new RegExp("[\W\S]]")
+
+    // pull from the server deep instance of lesson.
 
     useEffect(() => {
         if (!state.isReady && props.lesson === undefined) {
@@ -21,15 +21,16 @@ export default function LessonNew(props) {
                     description: '',
                     order: props.order,
                     content: '',
-                    condition: 0,
-                    tests: []
+                    condition: 0
                 },
+                
                 isReady: true, isNew: true
             })
+
             return
         }
 
-        setState({ lesson: props.lesson, isReady: true, isNew: false })
+            setState({ lesson: { ...props.lesson, id: props.lesson.lessonId} , isReady: true, isNew: false })
         console.log(state)
     }, [props])
 
@@ -112,29 +113,6 @@ export default function LessonNew(props) {
                     </Select>
                 </FormControl>
 
-                <TextField
-                    required
-                    multiline
-                    error={state.lesson.content.length < 100}
-                    type='text'
-                    variant="outlined"
-                    color="primary"
-                    label="Content"
-                    placeholder='100 symbols at least'
-                    onChange={e => {
-                        setState((prev) => (
-                            {
-                                ...prev,
-                                lesson: {
-                                    ...prev.lesson,
-                                    content: e.target.value
-                                }
-                            }
-                        ))
-                    }
-                    }
-                    value={state.lesson.content}
-                />
                 <Button variant="outlined" color="success" type="submit">{state.isNew? `Add` : `Save`}</Button>
             </Stack>
         </form>

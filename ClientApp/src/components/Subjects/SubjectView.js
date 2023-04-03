@@ -5,13 +5,13 @@ import authService from '../api-authorization/AuthorizeService';
 import { Button } from "@mui/material";
 import ListItem from '../Common/ListItem';
 import { Get } from '../Common/fetcher';
-import LessonNew from './LessonNew';
+import LessonNew from '../Lessons/LessonNew';
 
 export default function SubjectView() {
     const { id } = useParams();
-    const [ state, setState ] = useState({ subject: undefined, isLoading: true })
     const navigate = useNavigate();
-
+    
+    const [ state, setState ] = useState({ subject: undefined, isLoading: true })
     const [pageState, setPageState] = useState({ editMode: false, editable: undefined })
     const [user, setUser] = useState(0)
 
@@ -34,7 +34,7 @@ export default function SubjectView() {
         if (!!state && state.isLoading && id !== undefined)
             loadSubjInfo(id)
         else console.log(state)
-    }, [id])
+    }, [id, state.isLoading])
 
     function editChild(id) {
         var lessonEditable = state.subject.lessons.find(l => l.lessonId === id)
@@ -44,7 +44,6 @@ export default function SubjectView() {
 
     if (state.isLoading) return <i>Loading...</i>
     if (state.subject === undefined) return <i><strong>Subject doesn't exist</strong></i>
-
 
     return (
         <div>
@@ -100,7 +99,11 @@ export default function SubjectView() {
             </>)}
             
             {pageState.editMode && <LessonNew
-                onDone={() => setPageState({ editMode: false, editable: undefined })}
+                onDone={() => { 
+                    setPageState({ editMode: false, editable: undefined });
+                    setState({ subject: undefined, isLoading: true })
+                }}
+
                 lesson={pageState.editable}
                 order={state.subject.lessons.length}
                 subjectId={state.subject.id}                    

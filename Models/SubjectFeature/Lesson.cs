@@ -1,6 +1,8 @@
-﻿using DistantEdu.Types;
+﻿using System;
+using DistantEdu.Types;
 using DistantEdu.Models.StudentProfileFeature;
 using System.ComponentModel.DataAnnotations.Schema;
+using DistantEdu.MessageObject;
 
 namespace DistantEdu.Models.SubjectFeature
 {
@@ -18,8 +20,17 @@ namespace DistantEdu.Models.SubjectFeature
 
         [ForeignKey(nameof(Subject))]
         public int SubjectId { get; set; }
-        public Subject Subject { get; set; }
+        public Subject? Subject { get; set; }
         public List<LessonScore> LessonScores {get; set;} = new List<LessonScore>();
-        // stringified content
+
+        public Lesson() { }
+        public Lesson(LessonMessage lessonMessage){
+            Order = lessonMessage.Order;
+            Condition = lessonMessage.Condition;
+            Name = lessonMessage.Name;
+            Description = lessonMessage.Description;
+            Content = lessonMessage.Content ?? string.Empty;
+            SubjectId = lessonMessage.SubjectId;
+        }
     }
 }

@@ -119,7 +119,8 @@ export default function LessonView(props){
                 }                
             />
         })}
-        {authenticate(user.role, TEACHER_ROLE) && <Button color='primary'>Add</Button>}
+        {authenticate(user.role, TEACHER_ROLE) && <Button 
+            color='primary' onClick={() => navigate(`/quiz/new/${state.lesson.lessonId}`)}>Add quiz</Button>}
 
         <Stack direction={'row'} justifyContent={'space-between'} >
             <Button color='primary' disabled={state.p[1] === 0} onClick={ prev }>

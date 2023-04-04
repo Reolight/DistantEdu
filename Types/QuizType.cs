@@ -9,7 +9,7 @@
         Hardcore = 1,
 
         // Must be completed if pass condition is not ReadOnly
-        Key = 2, 
+        Key = 2,
 
         // As Key and hardcore
         KeyHardcore = 4

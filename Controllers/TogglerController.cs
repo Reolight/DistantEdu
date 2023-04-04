@@ -11,11 +11,9 @@ namespace DistantEdu.Controllers
     public class TogglerController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        public TogglerController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public TogglerController(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
         }
 
         public class ToggleAction{
@@ -28,7 +26,7 @@ namespace DistantEdu.Controllers
         public async Task<IActionResult> Post([FromBody] ToggleAction action)
         {
             if (User.Identity is not { Name: { } } CurrentUser) return BadRequest();
-            if (action.Name.ToLower() != CurrentUser.Name.ToLower()) return ValidationProblem();
+            if (!string.Equals(action.Name, CurrentUser.Name, StringComparison.OrdinalIgnoreCase)) return ValidationProblem();
             if (await _userManager.FindByNameAsync(CurrentUser.Name) is not { } user) return NotFound();
             if (await _userManager.IsInRoleAsync(user, action.TeacherChecked? Roles.Teacher : Roles.Student))
                 return NoContent();

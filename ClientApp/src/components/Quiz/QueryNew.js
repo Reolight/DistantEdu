@@ -48,6 +48,8 @@ export default function QueryNew(props){
                     return prev
                 })
 
+                if (isPosted)
+                    setIsPosted(false)
                 setCount(e.target.value)
             }}
         />
@@ -148,6 +150,7 @@ export default function QueryNew(props){
     function getFromString(text, add = false){
         const lines = text.split('\n');
         const obj = {
+            content: '',
             replies: []
         };
 
@@ -167,14 +170,14 @@ export default function QueryNew(props){
                     });
                     break;
                 default:
-                    obj = {...obj, content: line.trim() }
+                    obj.content = line.trim()
                     break;
               }
         }
 
         setReplies(add? [...replies.slice(0, replies.length - 1), obj.replies, {isCorrect: false, content: ''}] 
                       : [...obj.replies, {isCorrect: false, content: ''}])
-        if (!!obj.content && obj.content.trim().length > 0)
+        if (!!obj.content && obj.content.trim().length > 0 && !add)
             setContent(obj.content.trim())
     }
 }

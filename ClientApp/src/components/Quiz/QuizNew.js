@@ -95,18 +95,18 @@ export default function QuizNew(){
     if (!!state.quiz){ 
         return (
         <Stack direction={'column'} spacing={1}>
-            <TextField label='Name' value={state.name} 
-                error={state.name.length < 3}
-                helperText={state.name.length < 3&& 'More than 2 symbols'}
+            <TextField label='Name' value={state.quiz.name} 
+                error={state.quiz.name.length < 3}
+                helperText={state.quiz.name.length < 3&& 'More than 2 symbols'}
                 onChange={(e) => setState((prev) => {
-                    return {...prev, name: e.target.value}
+                    return {...prev, quiz: { ...prev.quiz, name: e.target.value}}
                 })}
             />
-            <TextField label='Description' value={state.description}
-                error={state.name.description < 10}
-                helperText={state.description.length < 10 && 'More than 10 symbols'}
+            <TextField label='Description' value={state.quiz.description}
+                error={state.quiz.description < 10}
+                helperText={state.quiz.description.length < 10 && 'More than 10 symbols'}
                 onChange={(e) => setState((prev) => { 
-                    return {...prev, description: e.target.value}
+                    return {...prev, quiz: {...prev.quiz, description: e.target.value}}
                 })}
             />
 
@@ -136,8 +136,6 @@ export default function QuizNew(){
             </FormControl>
             
             <TextField label='Duration (min)' value={state.quiz.duration} type="number"
-                error={state.quiz.count > state.quiz.duration && state.quiz.duration !== 0}
-                helperText={state.quiz.count > state.quiz.duration && state.quiz.duration !== 0 && `It can be hard to complete ${state.quiz.count} questions for ${state.quiz.duration} min`}
                 onChange={(e) => setState((prev) => { 
                     return {...prev, quiz: {...state.quiz, duration: e.target.value}}
                 })}
@@ -162,17 +160,29 @@ export default function QuizNew(){
 
             <Stack direction={'row'} spacing={3} justifyContent={'space-evenly'} >
                 <Button label='Add' color="primary"
-                    onClick={() => setState({
+                    onClick={() => {setState({
                         ...state,
                         quiz: {
                             ...state.quiz,
                             questions: [...state.quiz.questions, { content: '', count: 0, replies: [] }]
-                        }
-                    })}
+                            }
+                        })
+
+                        setPage(state.quiz.questions.length+1)
+                    }}
                 >Add question</Button>
                 <Button color="error" disabled={page <= 0} 
                     onClick={() => {
                         const quests = state.quiz.questions;
+                        if (!!quests[page-1] &&
+                            (quests[page-1].content !== '' ||
+                            quests[page-1].replies.length > 0))
+                        {
+                            const conf = window.confirm('Are you realy want to delete not empty question?')
+                            if (!conf)
+                                return
+                        }
+                        
                         quests.splice(page-1, 1)
                         setState({
                             ...state,

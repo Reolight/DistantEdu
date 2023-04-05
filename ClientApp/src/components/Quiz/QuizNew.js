@@ -13,7 +13,7 @@ export default function QuizNew(){
     const [page, setPage] = useState(-1)
     const [user, setUser] = useState(0)
 
-    useEffect(() => {})
+    useEffect(() => {console.log(state)}, [state.quiz])
 
     useEffect(() => {
         async function loadUser() {
@@ -39,7 +39,7 @@ export default function QuizNew(){
                 quiz : !!quiz? quiz : {
                     name: '',
                     description: '',
-                    duration: '',
+                    duration: 0,
                     qType: 0,
                     count: 0,
                     lessonId: id,
@@ -59,7 +59,7 @@ export default function QuizNew(){
     function SetQuestion(question){
         setState((prev) => {
             const queries = prev.quiz.questions;
-            queries[page] = question
+            queries[page - 1] = question
 
             const newState = {
                 ...prev, 
@@ -96,11 +96,15 @@ export default function QuizNew(){
         return (
         <Stack direction={'column'} spacing={1}>
             <TextField label='Name' value={state.name} 
-                onChange={(e) => setState((prev) => { 
+                error={state.name.length < 3}
+                helperText={state.name.length < 3&& 'More than 2 symbols'}
+                onChange={(e) => setState((prev) => {
                     return {...prev, name: e.target.value}
                 })}
             />
             <TextField label='Description' value={state.description}
+                error={state.name.description < 10}
+                helperText={state.description.length < 10 && 'More than 10 symbols'}
                 onChange={(e) => setState((prev) => { 
                     return {...prev, description: e.target.value}
                 })}
@@ -131,20 +135,22 @@ export default function QuizNew(){
                 </Select>
             </FormControl>
             
-            <TextField label='Duration (min)' value={state.duration} type="number"
+            <TextField label='Duration (min)' value={state.quiz.duration} type="number"
+                error={state.quiz.count > state.quiz.duration && state.quiz.duration !== 0}
+                helperText={state.quiz.count > state.quiz.duration && state.quiz.duration !== 0 && `It can be hard to complete ${state.quiz.count} questions for ${state.quiz.duration} min`}
                 onChange={(e) => setState((prev) => { 
-                    return {...prev, duration: e.target.value}
+                    return {...prev, quiz: {...state.quiz, duration: e.target.value}}
                 })}
             />
-            <TextField label='Count' value={state.count} type="number" 
+            <TextField label='Count' value={state.quiz.count} type="number" 
                 onChange={(e) => setState((prev) => { 
-                    return {...prev, count: e.target.value}
+                    return {...prev, quiz: {...state.quiz, count: e.target.value}}
                 })}
             />
         
             {page >= 0 && <Card key={page}>
                 <QueryNew 
-                    page={page}
+                    page={page-1}
                     query={state.quiz.questions[page-1]}
                     onDone={(question) => SetQuestion(question)}
                 />
@@ -160,7 +166,7 @@ export default function QuizNew(){
                         ...state,
                         quiz: {
                             ...state.quiz,
-                            questions: [...state.quiz.questions, { content: '', count: 0, replies: undefined }]
+                            questions: [...state.quiz.questions, { content: '', count: 0, replies: [] }]
                         }
                     })}
                 >Add question</Button>
@@ -176,18 +182,32 @@ export default function QuizNew(){
                             }
                         })
 
-                        if (page > quests.length) 
-                            setPage(quests.length)
+                        setPage((prev) => prev-1)
                     }}
                 >Remove question</Button>
             </Stack>
-
-            {state.quiz.questions.length > 0 && <Pagination 
-                count={state.quiz.questions.length}
-                page={page}
-                onChange={(e, v) => setPage(v)}
-            />}
             
+            <Stack justifyItems={'center'} justifyContent={"space-evenly"}>
+                {state.quiz.questions.length > 0 && <Pagination
+                    count={state.quiz.questions.length}
+                    page={page}
+                    onChange={(e, v) => setPage(v)}
+                    sx={{mx: 0}}
+                />}
+            </Stack>
+            <Button 
+                color="success"
+            >Post quiz</Button>
         </Stack>)
+
+        function ValideateInput(){
+            let isCorrect = !!state.quiz && state.quiz.name.length > 2 &&
+                state.quiz.description.length > 10 && state.quiz.count > 0
+                && !!state.quiz.questions
+            if (!isCorrect)
+                return 'Check quiz settings. Name longer than 2 symb., description - than 10. Count must be greater than one and less than inputed quantity of questions. Questions amount must be more than 0.'
+            
+            
+        }
     }
 }

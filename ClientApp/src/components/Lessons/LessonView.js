@@ -92,13 +92,14 @@ export default function LessonView(props){
         </>
 
         <br/>
-        
+
         {state.lesson.quizzes.map((quiz) => {
-            <ListItem
+            return (<ListItem
+                key={`li${quiz.id}`}
                 item={{
                     id: quiz.id, 
                     name: quiz.name,
-                    description: ((quiz) => <>
+                    description: (() => <>
                         <p>{quiz.description}</p>
                         <p><i>Duration: {quiz.duration}</i></p>
                         <p>Count: {quiz.count}</p>
@@ -113,12 +114,13 @@ export default function LessonView(props){
                 style={
                     quiz.score > 0? 
                         {backgroundColor: "#cefad0"}:
-                        quiz.startTime !== undefined?
+                        quiz.startTime === undefined?
                             {backgroundColor: '#ffff9f'}:
                             {backgroundColor: "#f6f6f6"}
                 }                
             />
-        })}
+        )})}
+
         {authenticate(user.role, TEACHER_ROLE) && <Button 
             color='primary' onClick={() => navigate(`/quiz/new/${state.lesson.lessonId}`)}>Add quiz</Button>}
 

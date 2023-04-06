@@ -98,7 +98,7 @@ namespace DistantEdu.Migrations
                     b.Property<bool>("IsPassed")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LessonId")
+                    b.Property<int?>("LessonId")
                         .HasColumnType("int");
 
                     b.Property<int>("SubjectSubscriptionId")
@@ -121,17 +121,17 @@ namespace DistantEdu.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("QueryId")
+                    b.Property<int>("IsCorrect")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsReplied")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("QueryId")
                         .HasColumnType("int");
 
                     b.Property<int>("QuizScoreId")
                         .HasColumnType("int");
-
-                    b.Property<int>("isCorrect")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("isReplied")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -156,7 +156,7 @@ namespace DistantEdu.Migrations
                     b.Property<int>("LessonScoreId")
                         .HasColumnType("int");
 
-                    b.Property<int>("QuizId")
+                    b.Property<int?>("QuizId")
                         .HasColumnType("int");
 
                     b.Property<double>("Score")
@@ -188,7 +188,7 @@ namespace DistantEdu.Migrations
                     b.Property<int>("QueryRepliedId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ReplyId")
+                    b.Property<int?>("ReplyId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -228,7 +228,7 @@ namespace DistantEdu.Migrations
                     b.Property<int>("StudentProfileId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SubjectId")
+                    b.Property<int?>("SubjectId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -316,8 +316,8 @@ namespace DistantEdu.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time");
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
 
                     b.Property<int>("LessonId")
                         .HasColumnType("int");
@@ -345,14 +345,13 @@ namespace DistantEdu.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
 
                     b.Property<int>("QueryId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("isCorrect")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -669,8 +668,7 @@ namespace DistantEdu.Migrations
                     b.HasOne("DistantEdu.Models.SubjectFeature.Lesson", "Lesson")
                         .WithMany("LessonScores")
                         .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("DistantEdu.Models.StudentProfileFeature.SubjectSubscription", "SubjectSubscription")
                         .WithMany("LessonScores")
@@ -688,10 +686,9 @@ namespace DistantEdu.Migrations
                     b.HasOne("DistantEdu.Models.SubjectFeature.Query", "Query")
                         .WithMany("QueryReplieds")
                         .HasForeignKey("QueryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("DistantEdu.Models.StudentProfileFeature.QuizScore", "Quiz")
+                    b.HasOne("DistantEdu.Models.StudentProfileFeature.QuizScore", "QuizScore")
                         .WithMany("QueryReplieds")
                         .HasForeignKey("QuizScoreId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -699,7 +696,7 @@ namespace DistantEdu.Migrations
 
                     b.Navigation("Query");
 
-                    b.Navigation("Quiz");
+                    b.Navigation("QuizScore");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QuizScore", b =>
@@ -713,8 +710,7 @@ namespace DistantEdu.Migrations
                     b.HasOne("DistantEdu.Models.SubjectFeature.Quiz", "Quiz")
                         .WithMany("QuizScores")
                         .HasForeignKey("QuizId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("LessonScore");
 
@@ -732,8 +728,7 @@ namespace DistantEdu.Migrations
                     b.HasOne("DistantEdu.Models.SubjectFeature.Reply", "Reply")
                         .WithMany("Replieds")
                         .HasForeignKey("ReplyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("QueryReplied");
 
@@ -751,8 +746,7 @@ namespace DistantEdu.Migrations
                     b.HasOne("DistantEdu.Models.SubjectFeature.Subject", "Subject")
                         .WithMany("SubjectSubscription")
                         .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Subject");
 

@@ -7,17 +7,17 @@ namespace DistantEdu.Models.StudentProfileFeature
     public class QueryReplied
     {
         public int Id { get; set; }
-        public bool isReplied { get; set; }
-        public CorrectGrades isCorrect { get; set; }
+        public bool IsReplied { get; set; }
+        public CorrectGrades IsCorrect { get; set; }
 
 
         [ForeignKey(nameof(Query))]
-        public int QueryId { get; set; }
-        public Query Query { get; set; }
+        public int? QueryId { get; set; }
+        public Query? Query { get; set; }
 
-        [ForeignKey(nameof(QuizScore))]
+        [ForeignKey(nameof(StudentProfileFeature.QuizScore))]
         public int QuizScoreId { get; set; }
-        public QuizScore Quiz { get; set; }
+        public QuizScore? QuizScore { get; set; }
         public List<Replied> Answers { get; set; } = new List<Replied>();
     }
 }

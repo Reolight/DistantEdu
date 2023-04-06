@@ -14,7 +14,9 @@ const context = [
     "/_framework",
     "/subject",
     "/Toggler",
-    "/lesson"
+    "/lesson",
+    "/quiz",
+    "/answer"
 ];
 
 const onError = (err, req, resp, target) => {

@@ -4,9 +4,8 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        
-        public List<SubjectSubscription> SubjectSubscriptions { get; set; } = new List<SubjectSubscription>();
 
+        public List<SubjectSubscription> SubjectSubscriptions { get; set; } = new List<SubjectSubscription>();
 
         public StudentProfile() { }
         public StudentProfile(string name)

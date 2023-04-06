@@ -4,10 +4,11 @@ import authService from "../api-authorization/AuthorizeService";
 import { TEACHER_ROLE, authenticate } from "../../roles";
 import { Button, Card, FormControl, InputLabel, MenuItem, Pagination, Select, Stack, TextField } from "@mui/material";
 import QueryNew from "./QueryNew";
+import { Post } from "../Common/fetcher";
 
 export default function QuizNew(){
     const navigate = useNavigate()
-    const id = useParams();
+    const { id } = useParams();
 
     const [state, setState] = useState( { quiz: undefined, isReady: false, isPosting: false })
     const [page, setPage] = useState(-1)
@@ -73,22 +74,6 @@ export default function QuizNew(){
         })
     }
 
-    function RemoveQuestion(n){
-        setState((prev) => {
-            const newState = {
-                ...prev,
-                quiz: {
-                    ...prev.quiz,
-                    questions: prev.quiz.questions.splice(n, 1)
-                }
-            }
-
-            if (page >= state.quiz.questions.length)
-                setPage(state.quiz.questions.length - 1)
-            return newState;
-        })
-    }
-
     if (!state.isReady)
         return <p><i>Loading...</i></p>
 
@@ -136,6 +121,8 @@ export default function QuizNew(){
             </FormControl>
             
             <TextField label='Duration (min)' value={state.quiz.duration} type="number"
+                error={state.quiz.duration > 4320}
+                helperText={state.quiz.duration > 180 && "The duration of the quiz is quite long"}
                 onChange={(e) => setState((prev) => { 
                     return {...prev, quiz: {...state.quiz, duration: e.target.value}}
                 })}
@@ -146,6 +133,13 @@ export default function QuizNew(){
                 })}
             />
         
+            <Button
+                label="Download questions"
+                color='info'
+                onClick={() => formDataAndDownload()}
+                disabled={state.quiz.questions.length === 0}
+            >Download questions</Button>
+
             {page >= 0 && <Card key={page}>
                 <QueryNew 
                     page={page-1}
@@ -207,15 +201,46 @@ export default function QuizNew(){
             </Stack>
             <Button 
                 color="success"
-                disabled={ () => !validateInput() }
+                disabled={ !validateInput }
+                onClick={() => postQuiz()}
             >Post quiz</Button>
         </Stack>)
+    }
 
-function validateInput() {
-    const quiz = state.quiz;
-    return !!quiz && quiz.name.length > 2 && quiz.description.length > 10 && quiz.count > 0 &&
-        !!quiz.questions && quiz.questions.every(query => query.content.length > 4 &&
-            query.replies.every(reply => !!reply.content));
+    async function postQuiz(){
+        const response = await Post('quiz', state.quiz, () => navigate(-1));
+        if (response.ok){
+            alert('Quiz posted and will be removed from local storage');
+            localStorage.removeItem(`quiz${id}`)
+        } else {
+            alert(`Something got wrong. Status: ${response.status}`)
         }
+    }
+
+    function validateInput() {
+        const quiz = state.quiz;
+        return !!quiz && quiz.name.length > 2 && quiz.description.length > 10 && quiz.count > 0 &&
+            quiz.duration <= 4320 &&
+            !!quiz.questions && quiz.questions.every(query => query.content.length > 4 &&
+                query.replies.every(reply => !!reply.content));
+    }
+
+    function formDataAndDownload(){
+        let data = '';
+        for (const query of state.quiz.questions) {
+            data += `${query.content}\n`
+            for (const reply of query.replies){
+                data += `${reply.isCorrect?'+':'-'}${reply.content}\n`
+            }
+
+            data += `\n`
+        }
+
+        const blob = new Blob([data], { type: "text/plain"})
+        const element = document.createElement('a')
+        element.href = URL.createObjectURL(blob)
+        element.download = `${state.quiz.name}.txt`
+        document.body.appendChild(element)
+        element.click()
     }
 }

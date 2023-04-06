@@ -14,11 +14,11 @@ namespace DistantEdu.Models.StudentProfileFeature
         // unic per user
         [ForeignKey(nameof(LessonScore))]
         public int LessonScoreId { get; set; }
-        public LessonScore LessonScore { get; set; }
+        public LessonScore? LessonScore { get; set; }
 
         [ForeignKey(nameof(Quiz))]
-        public int QuizId { get; set; }
-        public Quiz Quiz { get; set; }
+        public int? QuizId { get; set; }
+        public Quiz? Quiz { get; set; }
 
         public List<QueryReplied> QueryReplieds { get; set; } = new List<QueryReplied>();
     }

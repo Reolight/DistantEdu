@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DistantEdu.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230321084211_mig4")]
-    partial class mig4
+    [Migration("20230406110044_initial1")]
+    partial class initial1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -101,22 +101,22 @@ namespace DistantEdu.Migrations
                     b.Property<bool>("IsPassed")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PassedLessonId")
+                    b.Property<int?>("LessonId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SubjectSubscriptionId")
+                    b.Property<int>("SubjectSubscriptionId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PassedLessonId");
+                    b.HasIndex("LessonId");
 
                     b.HasIndex("SubjectSubscriptionId");
 
-                    b.ToTable("LessonScore");
+                    b.ToTable("LessonScores");
                 });
 
-            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QuizScores", b =>
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QueryReplied", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -124,19 +124,83 @@ namespace DistantEdu.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("LessonScoreId")
+                    b.Property<int>("IsCorrect")
                         .HasColumnType("int");
 
-                    b.Property<int>("RepliedQuizId")
+                    b.Property<bool>("IsReplied")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("QueryId")
                         .HasColumnType("int");
+
+                    b.Property<int>("QuizScoreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QueryId");
+
+                    b.HasIndex("QuizScoreId");
+
+                    b.ToTable("QueryReplied");
+                });
+
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QuizScore", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset?>("EndTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("LessonScoreId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("QuizId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Score")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LessonScoreId");
 
-                    b.HasIndex("RepliedQuizId");
+                    b.HasIndex("QuizId");
 
                     b.ToTable("QuizScores");
+                });
+
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.Replied", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("QueryRepliedId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReplyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QueryRepliedId");
+
+                    b.HasIndex("ReplyId");
+
+                    b.ToTable("Replied");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.StudentProfile", b =>
@@ -151,12 +215,7 @@ namespace DistantEdu.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("SubjectId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("SubjectId");
 
                     b.ToTable("StudentProfiles");
                 });
@@ -169,15 +228,17 @@ namespace DistantEdu.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("StudentProfileId")
+                    b.Property<int>("StudentProfileId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SubjectId")
+                    b.Property<int?>("SubjectId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("StudentProfileId");
+
+                    b.HasIndex("SubjectId");
 
                     b.ToTable("SubjectSubscription");
                 });
@@ -189,6 +250,9 @@ namespace DistantEdu.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Condition")
+                        .HasColumnType("int");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -205,7 +269,7 @@ namespace DistantEdu.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SubjectId")
+                    b.Property<int>("SubjectId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -227,7 +291,10 @@ namespace DistantEdu.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("QuizId")
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuizId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -252,21 +319,24 @@ namespace DistantEdu.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time");
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("LessonId")
+                    b.Property<int>("LessonId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("QType")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LessonId");
 
-                    b.ToTable("Quizs");
+                    b.ToTable("Quizzes");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Reply", b =>
@@ -278,14 +348,13 @@ namespace DistantEdu.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("QueryId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("isCorrect")
+                    b.Property<bool>("IsCorrect")
                         .HasColumnType("bit");
+
+                    b.Property<int>("QueryId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -599,74 +668,136 @@ namespace DistantEdu.Migrations
 
             modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.LessonScore", b =>
                 {
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Lesson", "PassedLesson")
-                        .WithMany()
-                        .HasForeignKey("PassedLessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DistantEdu.Models.StudentProfileFeature.SubjectSubscription", null)
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Lesson", "Lesson")
                         .WithMany("LessonScores")
-                        .HasForeignKey("SubjectSubscriptionId");
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("PassedLesson");
-                });
-
-            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QuizScores", b =>
-                {
-                    b.HasOne("DistantEdu.Models.StudentProfileFeature.LessonScore", null)
-                        .WithMany("QuizScoresList")
-                        .HasForeignKey("LessonScoreId");
-
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Quiz", "RepliedQuiz")
-                        .WithMany()
-                        .HasForeignKey("RepliedQuizId")
+                    b.HasOne("DistantEdu.Models.StudentProfileFeature.SubjectSubscription", "SubjectSubscription")
+                        .WithMany("LessonScores")
+                        .HasForeignKey("SubjectSubscriptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("RepliedQuiz");
+                    b.Navigation("Lesson");
+
+                    b.Navigation("SubjectSubscription");
                 });
 
-            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.StudentProfile", b =>
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QueryReplied", b =>
                 {
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Subject", null)
-                        .WithMany("SubscribedUsers")
-                        .HasForeignKey("SubjectId");
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Query", "Query")
+                        .WithMany("QueryReplieds")
+                        .HasForeignKey("QueryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DistantEdu.Models.StudentProfileFeature.QuizScore", "QuizScore")
+                        .WithMany("QueryReplieds")
+                        .HasForeignKey("QuizScoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Query");
+
+                    b.Navigation("QuizScore");
+                });
+
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QuizScore", b =>
+                {
+                    b.HasOne("DistantEdu.Models.StudentProfileFeature.LessonScore", "LessonScore")
+                        .WithMany("QuizScoresList")
+                        .HasForeignKey("LessonScoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Quiz", "Quiz")
+                        .WithMany("QuizScores")
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("LessonScore");
+
+                    b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.Replied", b =>
+                {
+                    b.HasOne("DistantEdu.Models.StudentProfileFeature.QueryReplied", "QueryReplied")
+                        .WithMany("Answers")
+                        .HasForeignKey("QueryRepliedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Reply", "Reply")
+                        .WithMany("Replieds")
+                        .HasForeignKey("ReplyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("QueryReplied");
+
+                    b.Navigation("Reply");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.SubjectSubscription", b =>
                 {
-                    b.HasOne("DistantEdu.Models.StudentProfileFeature.StudentProfile", null)
+                    b.HasOne("DistantEdu.Models.StudentProfileFeature.StudentProfile", "SubscriberProfile")
                         .WithMany("SubjectSubscriptions")
-                        .HasForeignKey("StudentProfileId");
+                        .HasForeignKey("StudentProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Subject", "Subject")
+                        .WithMany("SubjectSubscription")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("SubscriberProfile");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Lesson", b =>
                 {
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Subject", null)
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Subject", "Subject")
                         .WithMany("Lessons")
-                        .HasForeignKey("SubjectId");
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subject");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Query", b =>
                 {
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Quiz", null)
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Quiz", "Quiz")
                         .WithMany("Questions")
-                        .HasForeignKey("QuizId");
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quiz");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Quiz", b =>
                 {
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Lesson", null)
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Lesson", "Lesson")
                         .WithMany("Tests")
-                        .HasForeignKey("LessonId");
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Reply", b =>
                 {
-                    b.HasOne("DistantEdu.Models.SubjectFeature.Query", null)
+                    b.HasOne("DistantEdu.Models.SubjectFeature.Query", "Query")
                         .WithMany("Replies")
-                        .HasForeignKey("QueryId");
+                        .HasForeignKey("QueryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Query");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -725,6 +856,16 @@ namespace DistantEdu.Migrations
                     b.Navigation("QuizScoresList");
                 });
 
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QueryReplied", b =>
+                {
+                    b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.QuizScore", b =>
+                {
+                    b.Navigation("QueryReplieds");
+                });
+
             modelBuilder.Entity("DistantEdu.Models.StudentProfileFeature.StudentProfile", b =>
                 {
                     b.Navigation("SubjectSubscriptions");
@@ -737,24 +878,35 @@ namespace DistantEdu.Migrations
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Lesson", b =>
                 {
+                    b.Navigation("LessonScores");
+
                     b.Navigation("Tests");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Query", b =>
                 {
+                    b.Navigation("QueryReplieds");
+
                     b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Quiz", b =>
                 {
                     b.Navigation("Questions");
+
+                    b.Navigation("QuizScores");
+                });
+
+            modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Reply", b =>
+                {
+                    b.Navigation("Replieds");
                 });
 
             modelBuilder.Entity("DistantEdu.Models.SubjectFeature.Subject", b =>
                 {
                     b.Navigation("Lessons");
 
-                    b.Navigation("SubscribedUsers");
+                    b.Navigation("SubjectSubscription");
                 });
 #pragma warning restore 612, 618
         }

@@ -11,7 +11,7 @@ namespace DistantEdu.Models.SubjectFeature
 
         [ForeignKey(nameof(Quiz))]
         public int QuizId { get; set; }
-        public Quiz Quiz { get; set; }
+        public Quiz? Quiz { get; set; }
         public List<Reply> Replies { get; set; } = new List<Reply>();
         public List<QueryReplied> QueryReplieds { get; set; } = new List<QueryReplied>();
     }

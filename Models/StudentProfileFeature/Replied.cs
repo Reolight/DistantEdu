@@ -9,11 +9,11 @@ namespace DistantEdu.Models.StudentProfileFeature
         public bool IsSelected { get; set; }
 
         [ForeignKey(nameof(Reply))]
-        public int ReplyId { get; set; }
-        public Reply Reply { get; set; }
+        public int? ReplyId { get; set; }
+        public Reply? Reply { get; set; }
 
         [ForeignKey(nameof(QueryReplied))]
         public int QueryRepliedId { get; set; }
-        public QueryReplied QueryReplied { get; set; }
+        public QueryReplied? QueryReplied { get; set; }
     }
 }

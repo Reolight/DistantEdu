@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 // props = { page, onDone }
 export default function QueryNew(props){
     const [content, setContent] = useState(!!props.query? props.query.content : '')
-    const [count, setCount] = useState(!!props.query? props.query.count : 0)
+    const [count, setCount] = useState(!!props.query? props.query.count : 1)
     const [replies, setReplies] = useState(!!props.query && !!props.query.replies? [...props.query.replies, {isCorrect: false, content: ''}]
                                                         : [{isCorrect: false, content: ''}])
     const [fastFill, setFastFill] = useState(false)
@@ -29,28 +29,10 @@ export default function QueryNew(props){
             sx={{width: 150}}
             value={count}
             onChange={(e)=>{
-                setReplies((prev) => {
-                    const toDel = [];
-                    prev.map((prevRepl, i) => {
-                        // mark to delete empty entry (except last one)
-                        if (prevRepl === undefined ||
-                            (prevRepl.isCorrect === undefined && 
-                            prevRepl.content === undefined &&
-                            i !== prev.length - 1))
-                            
-                            toDel = [...toDel, i];
-                    })
-                        // deleting empty in reverse order
-                    for (let j = toDel.length - 1; j >= 0; j--) {
-                        prev.splice(toDel[j], 1)
-                    }
-
-                    return prev
-                })
-
                 if (isPosted)
                     setIsPosted(false)
-                setCount(e.target.value)
+                if (e.target.value > 0)
+                    setCount(e.target.value)
             }}
         />
 

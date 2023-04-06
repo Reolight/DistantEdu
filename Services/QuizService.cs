@@ -14,7 +14,6 @@ namespace DistantEdu.Services
 
         private readonly ApplicationDbContext? _context;
         private readonly ILogger<QuizService> _logger;
-        public QuizService() { }
         public QuizService(ApplicationDbContext context, ILogger<QuizService> logger)
         {
             _context = context;
@@ -125,9 +124,9 @@ namespace DistantEdu.Services
             {
                 if (quizVm.Questions?.Find(q => q.QueryId == questAnswered.QueryId) is not { } questVm)
                     continue;
-                questVm.IsCorrect = questAnswered.isCorrect;
+                questVm.IsCorrect = questAnswered.IsCorrect;
                 questVm.QueryScoreId = questAnswered.Id;
-                questVm.IsReplied = questAnswered.isReplied;
+                questVm.IsReplied = questAnswered.IsReplied;
 
                 foreach (var replied in questAnswered.Answers)
                 {
@@ -196,12 +195,8 @@ namespace DistantEdu.Services
             if (_context is not { } db || await db.LessonScores.FindAsync(lessonScoreId) is not { } lessonScore)
                 return false;
 
-            if (lessonScore.QuizScoresList
-                .Where(qs => qs.QuizId == quiz.Id && (quiz.QType == QuizType.Hardcore || quiz.QType == QuizType.KeyHardcore))
-                .Any())
-
-                return false;
-            return true;
+            return !lessonScore.QuizScoresList
+                .Any(qs => qs.QuizId == quiz.Id && (quiz.QType == QuizType.Hardcore || quiz.QType == QuizType.KeyHardcore));
         }
 
         private async Task<QuizViewModel?> GetStartedNewQuizAsync(int quizId, int lessonScoreId)
@@ -239,7 +234,7 @@ namespace DistantEdu.Services
                                   select new ReplyViewModel
                                   {
                                       ReplyId = reply.Id,
-                                      Content = reply.Content,
+                                      Content = reply.Content ?? string.Empty,
                                       IsSelected = false
                                   }).ToList()
                    };
@@ -292,8 +287,8 @@ namespace DistantEdu.Services
             foreach (QuestionViewModel questionVm in questionViewModels)
             {
                 yield return new QueryReplied {
-                    isCorrect = Types.CorrectGrades.Unreplied,
-                    isReplied = false,
+                    IsCorrect = Types.CorrectGrades.Unreplied,
+                    IsReplied = false,
                     QueryId = questionVm.QueryId,
                     Answers = BuildAnswersTemplate(questionVm.Replies).ToList()
                 };
@@ -358,7 +353,7 @@ namespace DistantEdu.Services
 
         public async Task<List<QuizViewModel>> GetUnfinishedShallowQuizedById(List<QuizScore> quizScoresList)
         {
-            var quizzesList = await GetQuizzesAsync(from quizScore in quizScoresList select quizScore.QuizId);
+            var quizzesList = await GetQuizzesAsync(quizScoresList.Select(qs => qs.QuizId).OfType<int>());
             return JoinOnQuizShallow(quizScoresList, quizzesList).ToList();
         }
 
@@ -373,7 +368,7 @@ namespace DistantEdu.Services
             foreach (Replied replied in queryReplied.Answers)
             {
                 var reply = query.Replies.First(repl => repl.Id == replied.ReplyId);
-                if (reply.isCorrect == replied.IsSelected)
+                if (reply.IsCorrect == replied.IsSelected)
                     matches++;
             }
 
@@ -396,16 +391,16 @@ namespace DistantEdu.Services
 
             foreach (var questionReplied in quizScore.QueryReplieds)
             {
-                if (!questionReplied.isReplied) {
-                    questionReplied.isReplied = true;
-                    questionReplied.isCorrect = CorrectGrades.Unreplied;
+                if (!questionReplied.IsReplied) {
+                    questionReplied.IsReplied = true;
+                    questionReplied.IsCorrect = CorrectGrades.Unreplied;
                     continue;
                 }
 
                 var query = quiz.Questions.First(q => q.Id == questionReplied.QueryId);
                 var answerScore = GetScore(query, questionReplied);
                 score += isStrict ? Math.Floor(answerScore) : answerScore;
-                questionReplied.isCorrect = GetCorrectGrade(isStrict, in answerScore);
+                questionReplied.IsCorrect = GetCorrectGrade(isStrict, in answerScore);
             }
 
             quizScore.Score = score;
@@ -426,7 +421,7 @@ namespace DistantEdu.Services
         {
             if (await GetScoreWrappedByLoggerByIdAsync(quizScoreId) is not { } quizScore)
                 return null;
-            if (await GetQuizWrappedByLoggerByIdAsync(quizScore.QuizId) is not { } quiz)
+            if (quizScore.QuizId is not { } quizId || await GetQuizWrappedByLoggerByIdAsync(quizId) is not { } quiz)
                 return null;
 
             CalculateScore(quizScore, quiz);
@@ -455,7 +450,7 @@ namespace DistantEdu.Services
         {
             if (quizScore.QueryReplieds.Find(qr => qr.Id == answer.QueryScoreId) is not { } query)
                 throw new NullReferenceException(nameof(query));
-            query.isReplied = true;
+            query.IsReplied = true;
             foreach (var selected in answer.SelectedRepliesId)
                 query.Answers.First(a => a.Id == selected).IsSelected = true;
         }
@@ -480,7 +475,7 @@ namespace DistantEdu.Services
             quizViewModel.Name = quiz.Name;
             quizViewModel.Description = quiz.Description;
             quizViewModel.Count = quiz.Count;
-            quizViewModel.Duration = quiz.Duration;
+            quizViewModel.Duration = TimeSpan.FromMinutes(quiz.Duration);
             quizViewModel.QType = quiz.QType;
             quizViewModel.Score = quizScore.Score;
             quizViewModel.EndTime = quizScore.EndTime;
@@ -505,15 +500,15 @@ namespace DistantEdu.Services
                                            QueryId = query.Id,
                                            QueryScoreId = queryScore.Id,
                                            Content = query.Content,
-                                           IsCorrect = queryScore.isCorrect,
-                                           IsReplied = queryScore.isReplied,
+                                           IsCorrect = queryScore.IsCorrect,
+                                           IsReplied = queryScore.IsReplied,
                                            Replies = (from replied in queryScore.Answers
                                                       join reply in query.Replies on replied.ReplyId equals reply.Id
                                                       select new ReplyViewModel
                                                       {
                                                           ReplyId = reply.Id,
                                                           RepliedId = replied.Id,
-                                                          Content = reply.Content,
+                                                          Content = reply.Content ?? string.Empty,
                                                           IsSelected = replied.IsSelected,
                                                       }).ToList()
                                        }).ToList();

@@ -27,6 +27,7 @@ namespace DistantEdu.Services
             var profile = await _context.StudentProfiles
                 .Include(sp => sp.SubjectSubscriptions)
                 .ThenInclude(ss => ss.LessonScores)
+                .ThenInclude(ls => ls.QuizScoresList)
                 .FirstAsync(sp => sp.Name == userName);
             var lessonScore = profile.SubjectSubscriptions
                 .Where(ss => ss.SubjectId == lesson.SubjectId)
@@ -59,7 +60,10 @@ namespace DistantEdu.Services
         }
 
         private async Task<(Lesson, LessonScore)?> GetLessonAndScoreAsync(int subjectId, int order, string userName){
-            if (await _context.Lessons.FirstOrDefaultAsync(l => l.SubjectId == subjectId && l.Order == order) is not { } lesson ||
+            if (await _context.Lessons
+                    .Include(l => l.Tests)
+                    .ThenInclude(t => t.Questions)
+                    .FirstOrDefaultAsync(l => l.SubjectId == subjectId && l.Order == order) is not { } lesson ||
                 await GetLessonScoreAsync(lesson, userName) is not { } lessonScore)
             {
                 return null;

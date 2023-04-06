@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DistantEdu.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class initial1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -108,11 +108,25 @@ namespace DistantEdu.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StudentProfiles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentProfiles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Subjects",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Author = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
@@ -227,6 +241,233 @@ namespace DistantEdu.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Lessons",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    Condition = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SubjectId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Lessons", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Lessons_Subjects_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubjectSubscription",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubjectId = table.Column<int>(type: "int", nullable: true),
+                    StudentProfileId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubjectSubscription", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubjectSubscription_StudentProfiles_StudentProfileId",
+                        column: x => x.StudentProfileId,
+                        principalTable: "StudentProfiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SubjectSubscription_Subjects_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Quizzes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Duration = table.Column<int>(type: "int", nullable: false),
+                    QType = table.Column<int>(type: "int", nullable: false),
+                    Count = table.Column<int>(type: "int", nullable: false),
+                    LessonId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Quizzes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Quizzes_Lessons_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lessons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LessonScores",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsPassed = table.Column<bool>(type: "bit", nullable: false),
+                    SubjectSubscriptionId = table.Column<int>(type: "int", nullable: false),
+                    LessonId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LessonScores", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LessonScores_Lessons_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lessons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_LessonScores_SubjectSubscription_SubjectSubscriptionId",
+                        column: x => x.SubjectSubscriptionId,
+                        principalTable: "SubjectSubscription",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Query",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Count = table.Column<int>(type: "int", nullable: false),
+                    QuizId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Query", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Query_Quizzes_QuizId",
+                        column: x => x.QuizId,
+                        principalTable: "Quizzes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuizScores",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Score = table.Column<double>(type: "float", nullable: false),
+                    StartTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    EndTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LessonScoreId = table.Column<int>(type: "int", nullable: false),
+                    QuizId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuizScores", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuizScores_LessonScores_LessonScoreId",
+                        column: x => x.LessonScoreId,
+                        principalTable: "LessonScores",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_QuizScores_Quizzes_QuizId",
+                        column: x => x.QuizId,
+                        principalTable: "Quizzes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reply",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsCorrect = table.Column<bool>(type: "bit", nullable: false),
+                    QueryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reply", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reply_Query_QueryId",
+                        column: x => x.QueryId,
+                        principalTable: "Query",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QueryReplied",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsReplied = table.Column<bool>(type: "bit", nullable: false),
+                    IsCorrect = table.Column<int>(type: "int", nullable: false),
+                    QueryId = table.Column<int>(type: "int", nullable: true),
+                    QuizScoreId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QueryReplied", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QueryReplied_Query_QueryId",
+                        column: x => x.QueryId,
+                        principalTable: "Query",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_QueryReplied_QuizScores_QuizScoreId",
+                        column: x => x.QuizScoreId,
+                        principalTable: "QuizScores",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Replied",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsSelected = table.Column<bool>(type: "bit", nullable: false),
+                    ReplyId = table.Column<int>(type: "int", nullable: true),
+                    QueryRepliedId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Replied", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Replied_QueryReplied_QueryRepliedId",
+                        column: x => x.QueryRepliedId,
+                        principalTable: "QueryReplied",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Replied_Reply_ReplyId",
+                        column: x => x.ReplyId,
+                        principalTable: "Reply",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -283,6 +524,21 @@ namespace DistantEdu.Migrations
                 column: "Use");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Lessons_SubjectId",
+                table: "Lessons",
+                column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonScores_LessonId",
+                table: "LessonScores",
+                column: "LessonId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonScores_SubjectSubscriptionId",
+                table: "LessonScores",
+                column: "SubjectSubscriptionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PersistedGrants_ConsumedTime",
                 table: "PersistedGrants",
                 column: "ConsumedTime");
@@ -301,6 +557,61 @@ namespace DistantEdu.Migrations
                 name: "IX_PersistedGrants_SubjectId_SessionId_Type",
                 table: "PersistedGrants",
                 columns: new[] { "SubjectId", "SessionId", "Type" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Query_QuizId",
+                table: "Query",
+                column: "QuizId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QueryReplied_QueryId",
+                table: "QueryReplied",
+                column: "QueryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QueryReplied_QuizScoreId",
+                table: "QueryReplied",
+                column: "QuizScoreId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuizScores_LessonScoreId",
+                table: "QuizScores",
+                column: "LessonScoreId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuizScores_QuizId",
+                table: "QuizScores",
+                column: "QuizId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Quizzes_LessonId",
+                table: "Quizzes",
+                column: "LessonId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Replied_QueryRepliedId",
+                table: "Replied",
+                column: "QueryRepliedId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Replied_ReplyId",
+                table: "Replied",
+                column: "ReplyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reply_QueryId",
+                table: "Reply",
+                column: "QueryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubjectSubscription_StudentProfileId",
+                table: "SubjectSubscription",
+                column: "StudentProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubjectSubscription_SubjectId",
+                table: "SubjectSubscription",
+                column: "SubjectId");
         }
 
         /// <inheritdoc />
@@ -331,13 +642,43 @@ namespace DistantEdu.Migrations
                 name: "PersistedGrants");
 
             migrationBuilder.DropTable(
-                name: "Subjects");
+                name: "Replied");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "QueryReplied");
+
+            migrationBuilder.DropTable(
+                name: "Reply");
+
+            migrationBuilder.DropTable(
+                name: "QuizScores");
+
+            migrationBuilder.DropTable(
+                name: "Query");
+
+            migrationBuilder.DropTable(
+                name: "LessonScores");
+
+            migrationBuilder.DropTable(
+                name: "Quizzes");
+
+            migrationBuilder.DropTable(
+                name: "SubjectSubscription");
+
+            migrationBuilder.DropTable(
+                name: "Lessons");
+
+            migrationBuilder.DropTable(
+                name: "StudentProfiles");
+
+            migrationBuilder.DropTable(
+                name: "Subjects");
         }
     }
 }

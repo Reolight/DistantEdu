@@ -1,14 +1,10 @@
-﻿using AutoMapper.Configuration.Annotations;
-using DistantEdu.Data;
+﻿using DistantEdu.Data;
 using DistantEdu.Models;
-using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace DistantEdu.Controllers
 {
@@ -33,7 +29,7 @@ namespace DistantEdu.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostNewQuiz(int lessonId, [FromBody] Quiz quiz)
+        public async Task<ActionResult> PostNewQuiz([FromBody] Quiz quiz)
         {
             List<Query> queriesWithErrors = new();
             foreach (Query query in quiz.Questions)
@@ -48,8 +44,7 @@ namespace DistantEdu.Controllers
             await _context.SaveChangesAsync();
             return Ok(new {
                 isReady = isReadyForUse,
-                removed_questions = queriesWithErrors.Select(q => q.Content),
-                posted = quiz
+                removed_questions = queriesWithErrors.Select(q => q.Content)
             });
         }
 
@@ -60,21 +55,11 @@ namespace DistantEdu.Controllers
             return Ok(shallowQuizInfo);
         }
 
-        [HttpPost]
-        public async Task<ActionResult> StartQuiz(int lessonScoreId, int quizId)
-        {
-            var startetQuiz = await _quizService.StartNewQuizAsync(quizId, lessonScoreId);
-            return startetQuiz is not null? Ok(startetQuiz) : BadRequest("quest can not be started");
-        }
-
-        [HttpPost]
-        public async Task<ActionResult> FinishQuest(int quizScoreId)
-        {
-            if (await _context.QuizScores.FindAsync(quizScoreId) is not { } quizScore)
-                return BadRequest(new { message = $"quiz with {quizScoreId} is not found" });
-            _ = await _quizService.FinishQuizAsync(quizScoreId);
-            await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);
-            return Ok(new { message = "Finished", redirect = $"quiz\\{quizScoreId}" });
+        [HttpPut]
+        public async Task<ActionResult> UpdateQuiz([FromBody] Quiz quiz){
+            _context.Quizzes.Update(quiz);
+            await _context.SaveChangesAsync();
+            return Accepted();
         }
     }
 }

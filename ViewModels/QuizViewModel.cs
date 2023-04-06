@@ -31,7 +31,7 @@ namespace DistantEdu.ViewModels
             QuizId = quiz.Id;
             Name  = quiz.Name;
             Description = quiz.Description;
-            Duration = quiz.Duration;
+            Duration = TimeSpan.FromMinutes(quiz.Duration);
             QType = quiz.QType;
             Count = quiz.Count;
         }

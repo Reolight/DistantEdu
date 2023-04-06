@@ -26,6 +26,7 @@ namespace DistantEdu.Services
         {
             var profile = await _context.StudentProfiles
                 .Include(sp => sp.SubjectSubscriptions)
+                .ThenInclude(ss => ss.LessonScores)
                 .FirstAsync(sp => sp.Name == userName);
             var lessonScore = profile.SubjectSubscriptions
                 .Where(ss => ss.SubjectId == lesson.SubjectId)

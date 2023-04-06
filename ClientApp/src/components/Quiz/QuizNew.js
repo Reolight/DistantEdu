@@ -182,7 +182,7 @@ export default function QuizNew(){
                             if (!conf)
                                 return
                         }
-                        
+
                         quests.splice(page-1, 1)
                         setState({
                             ...state,
@@ -207,17 +207,15 @@ export default function QuizNew(){
             </Stack>
             <Button 
                 color="success"
+                disabled={ () => !validateInput() }
             >Post quiz</Button>
         </Stack>)
 
-        function ValideateInput(){
-            let isCorrect = !!state.quiz && state.quiz.name.length > 2 &&
-                state.quiz.description.length > 10 && state.quiz.count > 0
-                && !!state.quiz.questions
-            if (!isCorrect)
-                return 'Check quiz settings. Name longer than 2 symb., description - than 10. Count must be greater than one and less than inputed quantity of questions. Questions amount must be more than 0.'
-            
-            
+function validateInput() {
+    const quiz = state.quiz;
+    return !!quiz && quiz.name.length > 2 && quiz.description.length > 10 && quiz.count > 0 &&
+        !!quiz.questions && quiz.questions.every(query => query.content.length > 4 &&
+            query.replies.every(reply => !!reply.content));
         }
     }
 }

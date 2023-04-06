@@ -108,6 +108,7 @@ namespace DistantEdu.Controllers
 
             var subjVms = new SubjectViewModel(subject)
             {
+                SubscriptionId = subscription.Id,
                 Lessons = subject.Lessons.Select(lesson =>
                     _lessonService.GetShallowLessonAsync(lesson.Id, profile.Name).Result)
                         .OfType<LessonViewModel>()

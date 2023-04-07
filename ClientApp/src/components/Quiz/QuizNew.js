@@ -4,17 +4,31 @@ import authService from "../api-authorization/AuthorizeService";
 import { TEACHER_ROLE, authenticate } from "../../roles";
 import { Button, Card, FormControl, InputLabel, MenuItem, Pagination, Select, Stack, TextField } from "@mui/material";
 import QueryNew from "./QueryNew";
-import { Post } from "../Common/fetcher";
+import { Get, Post } from "../Common/fetcher";
 
+// params = lessonId, quizId?
 export default function QuizNew(){
     const navigate = useNavigate()
-    const { id } = useParams();
+    const { params } = useParams();
 
+    const [id, setId] = useState()
     const [state, setState] = useState( { quiz: undefined, isReady: false, isPosting: false })
     const [page, setPage] = useState(-1)
     const [user, setUser] = useState(0)
 
     useEffect(() => {console.log(state)}, [state.quiz])
+   
+    useEffect(() => {
+        async function loadParams(quizId) {
+            const quiz = await Get(`quiz?args=${quizId}`)
+            setState({ quiz: quiz, isReady: true, isPosting: true })
+        }
+
+        const p = params.split('-', 2);
+        setId(p[0])
+        if (p.length > 1)
+            loadParams(p[1])
+    }, [params])
 
     useEffect(() => {
         async function loadUser() {

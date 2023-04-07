@@ -95,9 +95,9 @@ export default function LessonView(props){
 
         {state.lesson.quizzes.map((quiz) => {
             return (<ListItem
-                key={`li${quiz.id}`}
+                key={`li${quiz.quizId}`}
                 item={{
-                    id: quiz.id, 
+                    id: quiz.quizId, 
                     name: quiz.name,
                     description: (() => <>
                         <p>{quiz.description}</p>
@@ -107,9 +107,14 @@ export default function LessonView(props){
                         {quiz.startTime && <p>Started: {quiz.startTime}
                             {quiz.endTime && <> - finished {quiz.endTime}</>}
                         </p>}
-                        {quiz.score && <p>{quiz.score}</p>}
+                        {quiz.score > 0 && <p>{quiz.score}</p>}
                     </>)}
                 }
+
+                role={user.role}
+                editRole={TEACHER_ROLE}
+                removeRole={TEACHER_ROLE}
+                editQuery={(id) => navigate(`/quiz/new/${state.lesson.lessonId}-${id}`)}
 
                 style={
                     quiz.score > 0? 

@@ -1,7 +1,9 @@
-﻿using DistantEdu.Data;
+﻿using System.Net.Http.Headers;
+using DistantEdu.Data;
 using DistantEdu.Models;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -48,11 +50,18 @@ namespace DistantEdu.Controllers
             });
         }
 
+        // args = quizId, lessonScoreId?
         [HttpGet]
-        public async Task<ActionResult> GetQuizInfo(int lessonScoreId, int quizId)
+        public async Task<ActionResult> GetQuizInfo(string args)
         {
-            var shallowQuizInfo = await _quizService.GetShallowQuizInfoAsync(lessonScoreId, quizId);
-            return Ok(shallowQuizInfo);
+            int[] intArray = args.Split(':').Select(int.Parse).ToArray();
+            if (intArray.Length > 1)
+                return Ok(await _quizService.GetShallowQuizInfoAsync(intArray[0], intArray[1]));
+            return Ok(await _context.Quizzes
+                                .Include(q => q.Questions)
+                                .ThenInclude(qt => qt.Replies)
+                                .FirstOrDefaultAsync(q => q.Id == intArray[0])
+                            );
         }
 
         [HttpPut]

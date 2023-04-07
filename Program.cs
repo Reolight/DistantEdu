@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using DistantEdu.Data;
 using DistantEdu.Models;
 using DistantEdu.Services;
+using System.Text.Json.Serialization;
 
 namespace DistantEdu
 {
@@ -31,7 +32,9 @@ namespace DistantEdu
             builder.Services.AddAuthentication()
                 .AddIdentityServerJwt();
 
-            builder.Services.AddControllersWithViews();
+            builder.Services.AddControllersWithViews()
+                .AddJsonOptions(opt => opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
             builder.Services.AddRazorPages();
 
             builder.Services.AddTransient<LessonService>();

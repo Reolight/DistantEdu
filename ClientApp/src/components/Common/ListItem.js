@@ -36,6 +36,7 @@ export default function ListItem(props) {
                     Edit
                 </Button>
             )}
+            
             {props.role && props.removeRole && authenticate(props.role, props.removeRole) && (
                 <Button size='small' color="error" onClick={() => {
                     console.log(`[${props.item.id}] ${props.item.name}: pressed REMOVE button`)

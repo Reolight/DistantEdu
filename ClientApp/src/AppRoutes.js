@@ -33,7 +33,7 @@ const AppRoutes = [
       element: <LessonView />
     },
     {
-      path: '/quiz/new/:id',
+      path: '/quiz/new/:params',
       requireAuth: true,
       element: <QuizNew />
     },

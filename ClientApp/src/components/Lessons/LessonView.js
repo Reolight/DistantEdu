@@ -101,20 +101,39 @@ export default function LessonView(props){
                     name: quiz.name,
                     description: (() => <>
                         <p>{quiz.description}</p>
-                        <p><i>Duration: {quiz.duration}</i></p>
-                        <p>Count: {quiz.count}</p>
+                        <p><b>Duration:</b> {quiz.duration > 0? quiz.duration : <i>{`unlimited`}</i>}</p>
+                        <p><b>Questions count:</b> {quiz.count}</p>
 
-                        {quiz.startTime && <p>Started: {quiz.startTime}
-                            {quiz.endTime && <> - finished {quiz.endTime}</>}
+                        {quiz.startTime && <p><b>Started:</b> {new Date(quiz.startTime).toLocaleString()}
+                            {quiz.endTime && <> - <b>finished</b> {new Date(quiz.endTime).toLocaleString()}</>}
                         </p>}
-                        {quiz.score > 0 && <p>{quiz.score}</p>}
+                        {!!quiz.endTime && <p><b>Score</b>:{quiz.score}</p>}
                     </>)}
                 }
 
                 role={user.role}
                 editRole={TEACHER_ROLE}
                 removeRole={TEACHER_ROLE}
-                editQuery={(id) => navigate(`/quiz/new/${state.lesson.lessonId}-${id}`)}
+                enterQuery={(id) =>{
+                    if (!!quiz.endTime && (quiz.qType === 1 || quiz.qType === 4)){
+                        alert(`The quiz cannot be retaken due to its limitations`)
+                        return;
+                    }
+
+                    if ((!!quiz.startTime && !!!quiz.endTime)
+                            ||
+                        window.confirm(`You are about to take a quiz '${quiz.name}'\n`
+                        +`${quiz.duration > 0 && `Quiz has time limit ${quiz.duration}\n`}`
+                        +`${(quiz.qType === 1 || quiz.qType === 4) && `This quiz can only be taken once\n.`}`
+                        +`${(quiz.qType === 2 || quiz.qType === 4) && `This quiz affects the passage of the lesson\n.`}`
+                        +`${(!!quiz.endTime && `You've completed this quiz. Next attempt will overwrite current one`)}`
+                        +`Proceed?`))
+                    {
+                        navigate(`/quiz_solver/${id}-${state.lesson.lessonScoreId}`)
+                    }
+                }}
+
+                editQuery={ (id) => { navigate(`/quiz/new/${state.lesson.lessonId}-${id}`) }}
 
                 style={
                     quiz.score > 0? 

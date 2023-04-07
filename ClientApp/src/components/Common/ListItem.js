@@ -1,9 +1,9 @@
 ﻿import React, { useEffect, useState } from 'react'
-import { Button, Typography, Card, CardActionArea, CardContent, CardActions } from "@mui/material";
+import { Button, Typography, Card, CardActionArea, CardContent, CardActions, CardHeader } from "@mui/material";
 import { authenticate } from '../../roles';
 
 // props = {item.(id,name,description), editRole, removeRole, 
-//          userRole, editQuery, removeQuery, style }
+//          userRole, enterQuery, editQuery, removeQuery, style }
 
 export default function ListItem(props) {
     // useEffect(() => console.log("List item received props: ", props),[props])
@@ -28,6 +28,7 @@ export default function ListItem(props) {
             }}>
                 Enter
             </Button>}
+
             {props.role && props.editRole && authenticate(props.role, props.editRole) && (
                 <Button size="small" color="secondary" onClick={() => {
                     console.log(`[${props.item.id}] ${props.item.name}: pressed edit button`)

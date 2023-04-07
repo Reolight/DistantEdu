@@ -30,9 +30,9 @@ namespace DistantEdu.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> StartQuiz(int lessonScoreId, int quizId)
+        public async Task<ActionResult> StartQuiz(int quizId, int lessonScoreId)
         {
-            var startetQuiz = await _quizService.StartNewQuizAsync(quizId, lessonScoreId);
+            var startetQuiz = await _quizService.StartQuiz(quizId, lessonScoreId);
             return startetQuiz is not null? Ok(startetQuiz) : BadRequest("quest can not be started");
         }
 
@@ -55,7 +55,8 @@ namespace DistantEdu.Controllers
             if (await _context.Quizzes.FindAsync(quizScore.QuizId) is not { } quiz)
                 return BadRequest(new { message = $"original quiz not found [{quizScore.QuizId}]" });
 
-            if (quizScore.StartTime + TimeSpan.FromMinutes(quiz.Duration) > DateTimeOffset.UtcNow)
+            // extra minute to get replies of expired quiz, if an user did it until the end
+            if (quizScore.StartTime + TimeSpan.FromMinutes(quiz.Duration + 1) <= DateTimeOffset.Now)
             {
                 _ = await _quizService.FinishQuizAsync(quizScoreId);
                 await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);

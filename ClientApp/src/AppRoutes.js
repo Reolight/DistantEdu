@@ -5,6 +5,7 @@ import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
 import LessonView from './components/Lessons/LessonView';
 import QuizNew from './components/Quiz/QuizNew';
+import QuizSolver from './components/Quiz/QuizSolver';
 import SubjectView from './components/Subjects/SubjectView';
 
 const AppRoutes = [
@@ -36,6 +37,11 @@ const AppRoutes = [
       path: '/quiz/new/:params',
       requireAuth: true,
       element: <QuizNew />
+    },
+    {
+      path: '/quiz_solver/:params',
+      requireAuth: true,
+      element: <QuizSolver />
     },
   ...ApiAuthorzationRoutes
 ];

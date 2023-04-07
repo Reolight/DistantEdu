@@ -3,6 +3,6 @@
     public class AnswerMessage
     {
         public int QueryScoreId { get; set; }
-        public List<int> SelectedRepliesId { get; set; } = new();
+        public List<int> SelectedReplies { get; set; } = new();
     }
 }

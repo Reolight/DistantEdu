@@ -11,7 +11,7 @@ namespace DistantEdu.ViewModels
         public double Score { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public TimeSpan Duration { get; set; }
+        public int Duration { get; set; }
 
         // Null means that quiz is not started yet
         public DateTimeOffset? StartTime { get; set; }
@@ -31,7 +31,7 @@ namespace DistantEdu.ViewModels
             QuizId = quiz.Id;
             Name  = quiz.Name;
             Description = quiz.Description;
-            Duration = TimeSpan.FromMinutes(quiz.Duration);
+            Duration = quiz.Duration;
             QType = quiz.QType;
             Count = quiz.Count;
         }

@@ -39,12 +39,15 @@ namespace DistantEdu.Services
             if (_context is not { } db)
                 throw new NullReferenceException($"{nameof(db)} is null");
             return isShallow ?
-                await db.QuizScores.FirstOrDefaultAsync(qs => qs.LessonScoreId == lessonScoreId && qs.QuizId == quizId) :
+                await db.QuizScores
+                    .OrderBy(qs => qs.StartTime)
+                    .LastOrDefaultAsync(qs => qs.LessonScoreId == lessonScoreId && qs.QuizId == quizId) :
                 await db.QuizScores
                 .Where(qs => qs.LessonScoreId == lessonScoreId && qs.QuizId == quizId)
                 .Include(qs => qs.QueryReplieds)
                 .ThenInclude(qr => qr.Answers)
-                .FirstOrDefaultAsync();
+                .OrderBy(qs => qs.StartTime)
+                .LastOrDefaultAsync();
         }
 
         private async Task<QuizScore?> RetrieveScoreFromDbByIdAsync(int quizScoreId, bool isShallow = false)
@@ -54,9 +57,9 @@ namespace DistantEdu.Services
             return isShallow ?
                 await db.QuizScores.FindAsync(quizScoreId) :
                 await db.QuizScores
-                .Include(qs => qs.QueryReplieds)
-                .ThenInclude(qr => qr.Answers)
-                .FirstOrDefaultAsync(qs => qs.Id == quizScoreId);
+                    .Include(qs => qs.QueryReplieds)
+                    .ThenInclude(qr => qr.Answers)
+                    .FirstOrDefaultAsync(qs => qs.Id == quizScoreId);
         }
 
         #endregion
@@ -178,13 +181,34 @@ namespace DistantEdu.Services
 
         #endregion
 
+        #region OLD_QUIZ_(UNFINISHED)
+
+        private bool FindIfThereOldStartedQuiz(int quizId, int lessonScoreId){
+            return _context?.QuizScores.Any(qs => qs.Id == quizId && qs.LessonScoreId == lessonScoreId && qs.EndTime == null) ?? false;
+        }
+
+        private async Task<QuizViewModel?> GetUnfinishedQuizAsync(int quizId, int lessonScoreId){
+            var quizScore = await GetQuizScoreWrappedByLoggerAsync(quizId, lessonScoreId, false);
+            var quiz = await GetQuizWrappedByLoggerByIdAsync(quizId);
+            if (quizScore is not null && quiz is not null)
+                return MergeInViewModelDeep(quizScore, quiz);
+            return null;
+        }
+
+        #endregion
+
         #region NEW_QUIZ
 
-        public async Task<QuizViewModel?> StartNewQuizAsync(int quizId, int lessonScoreId)
+        public async Task<QuizViewModel?> StartQuiz(int quizId, int lessonScoreId){
+            if (FindIfThereOldStartedQuiz(quizId, lessonScoreId))
+                return await GetUnfinishedQuizAsync(quizId, lessonScoreId);
+            return await StartNewQuizAsync(quizId, lessonScoreId);
+        }
+
+        private async Task<QuizViewModel?> StartNewQuizAsync(int quizId, int lessonScoreId)
         {
             if (await GetStartedNewQuizAsync(quizId, lessonScoreId) is not { } quiz)
                 return null;
-
             var quizScore = await SaveInDbAsync(quiz, lessonScoreId);
             AttachQuizScoreToQuizVm(quiz, quizScore);
             return quiz;
@@ -222,8 +246,7 @@ namespace DistantEdu.Services
 
         private IEnumerable<QuestionViewModel> BuildQuestions(List<Query> queries, int queryCount)
         {
-            var randomlySelectedQueries = SelectRandomElements(queries, queryCount);
-            return from query in randomlySelectedQueries
+            return from query in SelectRandomElements(queries, queryCount)
                    select new QuestionViewModel
                    {
                        QueryId = query.Id,
@@ -238,12 +261,13 @@ namespace DistantEdu.Services
                                       IsSelected = false
                                   }).ToList()
                    };
-
         }
 
-        private IEnumerable<T> SelectRandomElements<T>(List<T> elements, int countToSelect)
+        private static IEnumerable<T> SelectRandomElements<T>(List<T> elements, int countToSelect)
         {
             int[] selected = new int[countToSelect];
+            Array.Fill(selected, -1);
+            List<T> elems = new();
             Random random = new();
             for (int i = 0; i < countToSelect;)
             {
@@ -251,8 +275,10 @@ namespace DistantEdu.Services
                 if (selected.Contains(r))
                     continue;
                 selected[i++] = r;
-                yield return elements[r];
+                elems.Add(elements[r]);
             }
+
+            return elems;
         }
 
         #endregion
@@ -336,7 +362,8 @@ namespace DistantEdu.Services
 
         #endregion
 
-        #region GET_UNFINISHED
+        // ??
+        #region GET_UNFINISHED_QUIZZES
 
         private async Task<List<Quiz>> GetQuizzesAsync(IEnumerable<int> quizzesId)
         {
@@ -438,7 +465,7 @@ namespace DistantEdu.Services
             if (await GetScoreWrappedByLoggerByIdAsync(quizScoreId) is not { } quizScore)
                 return false;
 
-            foreach (var answer in answeres) 
+            foreach (var answer in answeres)
                 Reply(answer, quizScore);
 
             if (_context is not null)
@@ -451,8 +478,8 @@ namespace DistantEdu.Services
             if (quizScore.QueryReplieds.Find(qr => qr.Id == answer.QueryScoreId) is not { } query)
                 throw new NullReferenceException(nameof(query));
             query.IsReplied = true;
-            foreach (var selected in answer.SelectedRepliesId)
-                query.Answers.First(a => a.Id == selected).IsSelected = true;
+            foreach (var selected in answer.SelectedReplies)
+                query.Answers[selected].IsSelected = true;
         }
 
         #endregion
@@ -475,7 +502,7 @@ namespace DistantEdu.Services
             quizViewModel.Name = quiz.Name;
             quizViewModel.Description = quiz.Description;
             quizViewModel.Count = quiz.Count;
-            quizViewModel.Duration = TimeSpan.FromMinutes(quiz.Duration);
+            quizViewModel.Duration = quiz.Duration;
             quizViewModel.QType = quiz.QType;
             quizViewModel.Score = quizScore.Score;
             quizViewModel.EndTime = quizScore.EndTime;

@@ -36,17 +36,6 @@ namespace DistantEdu.Controllers
             return startetQuiz is not null? Ok(startetQuiz) : BadRequest("quest can not be started");
         }
 
-        // Updates not in classic way. Calculates internal state and then updates
-        [HttpPut]
-        public async Task<ActionResult> FinishQuest(int quizScoreId)
-        {
-            if (await _context.QuizScores.FindAsync(quizScoreId) is not { } quizScore)
-                return BadRequest(new { message = $"quiz with {quizScoreId} is not found" });
-            _ = await _quizService.FinishQuizAsync(quizScoreId);
-            await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);
-            return Ok(new { message = "Finished", redirect = $"quiz\\{quizScoreId}" });
-        }
-
         [HttpPost]
         public async Task<ActionResult> AnswerOnQuery(int quizScoreId, [FromBody] List<AnswerMessage> answers)
         {
@@ -55,15 +44,9 @@ namespace DistantEdu.Controllers
             if (await _context.Quizzes.FindAsync(quizScore.QuizId) is not { } quiz)
                 return BadRequest(new { message = $"original quiz not found [{quizScore.QuizId}]" });
 
-            // extra minute to get replies of expired quiz, if an user did it until the end
-            if (quizScore.StartTime + TimeSpan.FromMinutes(quiz.Duration + 1) <= DateTimeOffset.Now)
-            {
-                _ = await _quizService.FinishQuizAsync(quizScoreId);
-                await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);
-                return BadRequest(new { message = "replies rejected. Cause: time expired" });
-            }
-
             await _quizService.Reply(quizScoreId, answers);
+            _ = await _quizService.FinishQuizAsync(quizScoreId);
+            await _lessonService.DecideIfLessonPassedAsync(quizScore.LessonScoreId);
             return Ok();
         }
     }

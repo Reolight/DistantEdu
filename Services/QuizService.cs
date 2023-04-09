@@ -189,6 +189,8 @@ namespace DistantEdu.Services
 
         private async Task<QuizViewModel?> GetUnfinishedQuizAsync(int quizId, int lessonScoreId){
             var quizScore = await GetQuizScoreWrappedByLoggerAsync(quizId, lessonScoreId, false);
+            if (quizScore?.EndTime is not null)
+                return null;
             var quiz = await GetQuizWrappedByLoggerByIdAsync(quizId);
             if (quizScore is not null && quiz is not null)
                 return MergeInViewModelDeep(quizScore, quiz);
@@ -200,9 +202,10 @@ namespace DistantEdu.Services
         #region NEW_QUIZ
 
         public async Task<QuizViewModel?> StartQuiz(int quizId, int lessonScoreId){
-            if (FindIfThereOldStartedQuiz(quizId, lessonScoreId))
-                return await GetUnfinishedQuizAsync(quizId, lessonScoreId);
-            return await StartNewQuizAsync(quizId, lessonScoreId);
+            //if (FindIfThereOldStartedQuiz(quizId, lessonScoreId))
+            if (await GetUnfinishedQuizAsync(quizId, lessonScoreId) is not { } unfinished)
+                return await StartNewQuizAsync(quizId, lessonScoreId);
+            return unfinished;
         }
 
         private async Task<QuizViewModel?> StartNewQuizAsync(int quizId, int lessonScoreId)

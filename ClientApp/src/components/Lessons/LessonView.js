@@ -123,10 +123,10 @@ export default function LessonView(props){
                     if ((!!quiz.startTime && !!!quiz.endTime)
                             ||
                         window.confirm(`You are about to take a quiz '${quiz.name}'\n`
-                        +`${quiz.duration > 0 && `Quiz has time limit ${quiz.duration}\n`}`
-                        +`${(quiz.qType === 1 || quiz.qType === 4) && `This quiz can only be taken once\n.`}`
-                        +`${(quiz.qType === 2 || quiz.qType === 4) && `This quiz affects the passage of the lesson\n.`}`
-                        +`${(!!quiz.endTime && `You've completed this quiz. Next attempt will overwrite current one`)}`
+                        +`${quiz.duration > 0 ? `\tQuiz has time limit ${quiz.duration}\n` : ''}`
+                        +`${(quiz.qType === 1 || quiz.qType === 4) ? `\tThis quiz can only be taken once\n.` : ''}`
+                        +`${(quiz.qType === 2 || quiz.qType === 4) ? `\tThis quiz affects the passage of the lesson\n` : ''}`
+                        +`${(!!quiz.endTime ? `\tYou've completed this quiz. Next attempt will overwrite current one\n` : '')}`
                         +`Proceed?`))
                     {
                         navigate(`/quiz_solver/${id}-${state.lesson.lessonScoreId}`)

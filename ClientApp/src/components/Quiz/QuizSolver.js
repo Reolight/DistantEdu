@@ -14,7 +14,7 @@ export default function QuizSolver(){
     const [timeLeft, setTimeLeft] = useState()
     const [quiz, setQuiz] = useState(undefined);
 
-    function CalculateTimeLeft(startTime, duration){
+    function CalculateTimeLeft(startTime, duration){ 
         const elapsedSec = Math.floor(new Date().getTime() - startTime.getTime()) / 1000;
         const leftSec = duration * 60 - elapsedSec;
         console.log(`elapsed: `, elapsedSec, ` left: `, leftSec)
@@ -117,7 +117,11 @@ export default function QuizSolver(){
             })
         });
 
-        const repl = await Post(`answer?quizScoreId=${quiz.quizScoreId}`, answers, () => navigate(-1))
+        const repl = await Post(`answer?quizScoreId=${quiz.quizScoreId}`, answers, 
+            () => {
+                navigate(-1)
+            })
+
         alert(repl.ok? `Quiz accepted` : `Something wrong: ${repl.status}`)
     }
 }

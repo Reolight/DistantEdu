@@ -58,42 +58,7 @@ namespace DistantEdu.Controllers
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
 
-            var subject = await _context.Subjects
-                .Include(s => s.Lessons)
-                .AsNoTracking()
-                .FirstAsync(s => s.Id == id);
-
-            StudentProfile profile = await _context.StudentProfiles
-                .Include(profile => profile.SubjectSubscriptions)
-                .FirstOrDefaultAsync(sp => sp.Name == userClaims.Subject.Name)
-                ?? new StudentProfile{
-                    Name = userClaims.Subject.Name,
-                    SubjectSubscriptions = new()
-                };
-
-            var subscription = profile.SubjectSubscriptions.Find(ss => ss.SubjectId == id);
-
-            if (subscription is null) {
-                subscription = new SubjectSubscription{
-                    LessonScores = new(),
-                    SubjectId = id
-                };
-
-                profile.SubjectSubscriptions.Add(subscription);
-                subject.SubjectSubscription.Add(subscription);
-            }
-
-            await _context.SaveChangesAsync();
-
-            var subjVms = new SubjectViewModel(subject)
-            {
-                SubscriptionId = subscription.Id,
-                Lessons = subject.Lessons.Select(lesson =>
-                    _lessonService.GetShallowLessonAsync(lesson.Id, profile.Name).Result)
-                        .OfType<LessonViewModel>()
-                        .ToList()
-            };
-
+            var subjVms = await _mediator.Send(new GetSubjectByIdQuery() { Id = id, UserName = userClaims.Subject.Name });
             return Ok(subjVms);
         }
 
@@ -103,11 +68,8 @@ namespace DistantEdu.Controllers
         public async Task<IActionResult> Post([FromBody] SubjectViewModel subjectVm)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } AuthorClaims) return NoContent();
-            subjectVm.Author = AuthorClaims.Subject.Name;
-            var subject = new Subject(subjectVm);
-            await _context.Subjects.AddAsync(subject);
-            await _context.SaveChangesAsync();
-            return new CreatedAtActionResult("getbyid", "Subject", new {id = subject.Id}, subject);
+            await _mediator.Send(new PostSubjectRequest { AuthorName = AuthorClaims.Subject.Name, SubjectVm = subjectVm });
+            return new CreatedAtActionResult("Post", "Subject", subjectVm.Name, subjectVm);
         }
 
         [HttpPut]
@@ -115,11 +77,7 @@ namespace DistantEdu.Controllers
         [Route("{id}")]
         public async Task<ActionResult> Put([FromBody] SubjectViewModel subject)
         {
-            var subjectOrig = await _context.Subjects.FirstOrDefaultAsync(x => x.Id == subject.Id);
-            if (subjectOrig is null) return BadRequest();
-            subjectOrig.Update(subject);
-            _context.Subjects.Update(subjectOrig);
-            await _context.SaveChangesAsync();
+            await _mediator.Send(new PutSubjectRequest { Subject = subject });
             return new NoContentResult();
         }
 

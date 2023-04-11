@@ -1,4 +1,5 @@
 ﻿using DistantEdu.ViewModels;
+using MediatR;
 
 namespace DistantEdu.Command.CommandHandlers.Subjects
 {

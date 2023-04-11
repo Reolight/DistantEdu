@@ -1,30 +1,19 @@
 ﻿using DistantEdu.Data;
 using DistantEdu.ViewModels;
-using Duende.IdentityServer.EntityFramework.Entities;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Composition.Convention;
 
 namespace DistantEdu.Command.CommandHandlers.Subjects
 {
-    public class GetSubjectsHandler : Command<GetSubjectQuery, IEnumerable<SubjectViewModel>>
+    public class GetSubjectsHandler : IRequestHandler<GetSubjectQuery, IEnumerable<SubjectViewModel>>
     {
         private readonly ApplicationDbContext _db;
-        public GetSubjectsHandler(HttpContext context) : base(context) 
+        public GetSubjectsHandler(ApplicationDbContext db)
         {
-            var db = context.RequestServices.GetService<ApplicationDbContext>();
-            if (db is null)
-            {
-                throw new ArgumentNullException(nameof(db));
-            }
-
             _db = db;
         }
 
-        public override async Task<bool> CanExecute(GetSubjectQuery request)
-        {
-            return await Task.Factory.StartNew(() => !string.IsNullOrEmpty(request.Name));
-        }
-        public override async Task<IEnumerable<SubjectViewModel>> Execute(GetSubjectQuery request)
+        public async Task<IEnumerable<SubjectViewModel>> Handle(GetSubjectQuery request, CancellationToken cancellationToken)
         {
             var subjects = await _db.Subjects
                 .AsNoTracking()

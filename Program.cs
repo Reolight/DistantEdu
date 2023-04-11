@@ -6,6 +6,7 @@ using DistantEdu.Data;
 using DistantEdu.Models;
 using DistantEdu.Services;
 using System.Text.Json.Serialization;
+using System.Reflection;
 
 namespace DistantEdu
 {
@@ -36,9 +37,10 @@ namespace DistantEdu
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
             builder.Services.AddRazorPages();
-
+            
             builder.Services.AddTransient<LessonService>();
             builder.Services.AddTransient<QuizService>();
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             var app = builder.Build();
 

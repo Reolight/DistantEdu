@@ -10,6 +10,8 @@ using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using DistantEdu.Command.CommandHandlers.Subjects;
+using MediatR;
 
 namespace DistantEdu.Controllers
 {
@@ -22,15 +24,18 @@ namespace DistantEdu.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly LessonService _lessonService;
-        public SubjectController(ILogger<SubjectController> logger, 
+        private readonly IMediator _mediator;
+        public SubjectController(ILogger<SubjectController> logger,
                                 ApplicationDbContext context,
                                 UserManager<ApplicationUser> userManager,
-                                LessonService lessonService)
+                                LessonService lessonService,
+                                IMediator mediator)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _lessonService = lessonService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -39,35 +44,9 @@ namespace DistantEdu.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } UserClaims) 
                 return Unauthorized();
-
-            // As this app is not intendet to use under huge load retrieving all subjects won't be hard load all subj
-            var subjects = await _context.Subjects.AsNoTracking()
-                .ToListAsync();
-            if (subjects is not { }) 
-                return Ok(new List<SubjectViewModel>());
-
-            var subscriptions = _context.StudentProfiles
-                .AsNoTracking()
-                .Include(prof => prof.SubjectSubscriptions)
-                .Where(prof => prof.Name == UserClaims.Subject.Name)
-                .AsNoTracking()
-                .SelectMany(prof => prof.SubjectSubscriptions)
-                .ToList();
-            
-            // well, there is nothing special in subject subscription itself, just saving Id from it
-            var viewModels = from subject in subjects
-                            join subjectSubscription in subscriptions 
-                            on subject.Id equals subjectSubscription.SubjectId into subjectViewModels
-                            from subjectVm in subjectViewModels.DefaultIfEmpty()
-                            select new SubjectViewModel{
-                                Id = subject.Id,
-                                SubscriptionId = subjectVm?.Id,
-                                Name = subject.Name,
-                                Author = subject.Author,
-                                Description = subject.Description
-                            };
-
-            return Ok(viewModels);
+            GetSubjectQuery query = new GetSubjectQuery() { Name = UserClaims.Subject.Name };
+            IEnumerable<SubjectViewModel> viewModels = await _mediator.Send(query);
+            return Ok(viewModels ?? new List<SubjectViewModel>());
         }
 
         [HttpGet]

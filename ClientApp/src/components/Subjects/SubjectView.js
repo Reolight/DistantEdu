@@ -1,11 +1,11 @@
 ﻿import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ADMIN_ROLE, authenticate, STUDENT_ROLE, TEACHER_ROLE } from '../../roles';
+import { authenticate, TEACHER_ROLE } from '../../roles';
 import authService from '../api-authorization/AuthorizeService';
 import { Button } from "@mui/material";
 import ListItem from '../Common/ListItem';
-import { Get } from '../Common/fetcher';
 import LessonNew from '../Lessons/LessonNew';
+import Backend from '../Common/Backend';
 
 export default function SubjectView() {
     const { id } = useParams();
@@ -28,7 +28,7 @@ export default function SubjectView() {
 
     useEffect(() => {
         async function loadSubjInfo(id) {
-            const data = await Get(`subject/${id}`)
+            const data = await Backend.GetInstance().Get(`subject/${id}`)
             setState({ subject: data, isLoading: false });
         }
         if (!!state && state.isLoading && id !== undefined)

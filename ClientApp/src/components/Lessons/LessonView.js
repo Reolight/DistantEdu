@@ -1,11 +1,11 @@
 import { style } from "@mui/system";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Get, Patch } from "../Common/fetcher";
 import ListItem from "../Common/ListItem";
 import { Button, Stack, TextField } from "@mui/material";
 import { TEACHER_ROLE, authenticate } from "../../roles";
 import authService from "../api-authorization/AuthorizeService";
+import Backend from "../Common/Backend";
 
 // params: [subjectId]-[order]-[count]
 
@@ -31,7 +31,7 @@ export default function LessonView(props){
     useEffect(() => {
         async function loadLesson(){
             const par = params.split('-').map(val => parseInt(val))
-            const data = await Get(`lesson?subjectId=${par[0]}&order=${par[1]}`)
+            const data = await Backend.GetInstance().Get(`lesson?subjectId=${par[0]}&order=${par[1]}`)
             setState({ lesson: data, isLoading: false, p: par });
         }
 
@@ -82,8 +82,8 @@ export default function LessonView(props){
                             })
                         }}
                     />
-                    <Button color='primary' onClick={ () => {
-                        Patch(`lesson?lessonId=${state.lesson.lessonId}`, 
+                    <Button color='primary' onClick={async () => {
+                        await Backend.GetInstance().Patch(`lesson?lessonId=${state.lesson.lessonId}`, 
                         { content: state.lesson.content },
                         () => setContentEdit(false))
                     }}>Save</Button>

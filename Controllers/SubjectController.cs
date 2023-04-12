@@ -1,17 +1,11 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Identity;
+﻿using DistantEdu.Command.CommandHandlers.Subjects;
+using DistantEdu.Data;
+using DistantEdu.ViewModels;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DistantEdu.Data;
-using DistantEdu.Models;
-using DistantEdu.Services;
-using DistantEdu.Models.SubjectFeature;
-using DistantEdu.Models.StudentProfileFeature;
-using DistantEdu.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using DistantEdu.Command.CommandHandlers.Subjects;
-using MediatR;
 
 namespace DistantEdu.Controllers
 {
@@ -22,19 +16,13 @@ namespace DistantEdu.Controllers
     {
         private readonly ILogger<SubjectController> _logger;
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly LessonService _lessonService;
         private readonly IMediator _mediator;
         public SubjectController(ILogger<SubjectController> logger,
                                 ApplicationDbContext context,
-                                UserManager<ApplicationUser> userManager,
-                                LessonService lessonService,
                                 IMediator mediator)
         {
             _logger = logger;
             _context = context;
-            _userManager = userManager;
-            _lessonService = lessonService;
             _mediator = mediator;
         }
 

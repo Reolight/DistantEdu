@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import TextField from '@mui/material/TextField';
 import { Stack } from "@mui/system";
 import { Button, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import { Post, Put } from '../Common/fetcher';
+import Backend from '../Common/Backend';
 
 // props = subjectId, order, onDone. It may be `lesson` itself
 
@@ -36,8 +36,9 @@ export default function LessonNew(props) {
 
     async function FetchSubject(e) {
         e.preventDefault();
-        state.isNew? await Post(`lesson?subjectId=${props.subjectId}`, state.lesson, props.onDone)
-                   : await Put(`lesson`, state.lesson, props.onDone)
+        const backend = Backend.GetInstance()
+        state.isNew? await backend.Post(`lesson?subjectId=${props.subjectId}`, state.lesson, props.onDone)
+                   : await backend.Put(`lesson`, state.lesson, props.onDone)
     }
 
     if (!state.isReady) return <i>Loading...</i>

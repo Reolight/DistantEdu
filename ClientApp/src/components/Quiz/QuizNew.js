@@ -4,7 +4,7 @@ import authService from "../api-authorization/AuthorizeService";
 import { TEACHER_ROLE, authenticate } from "../../roles";
 import { Button, Card, FormControl, InputLabel, MenuItem, Pagination, Select, Stack, TextField } from "@mui/material";
 import QueryNew from "./QueryNew";
-import { Get, Post } from "../Common/fetcher";
+import Backend from "../Common/Backend";
 
 // params = lessonId, quizId?
 export default function QuizNew(){
@@ -20,7 +20,7 @@ export default function QuizNew(){
    
     useEffect(() => {
         async function loadParams(quizId) {
-            const quiz = await Get(`quiz?args=${quizId}`)
+            const quiz = await Backend.GetInstance().Get(`quiz?args=${quizId}`)
             setState({ quiz: quiz, isReady: true, isPosting: true })
         }
 
@@ -222,7 +222,7 @@ export default function QuizNew(){
     }
 
     async function postQuiz(){
-        const response = await Post('quiz', state.quiz, () => navigate(-1));
+        const response = await Backend.GetInstance().Post('quiz', state.quiz, () => navigate(-1));
         if (response.ok){
             alert('Quiz posted and will be removed from local storage');
             localStorage.removeItem(`quiz${id}`)

@@ -4,9 +4,9 @@ import authService from './api-authorization/AuthorizeService';
 import SubjectNew from './Subjects/SubjectNew';
 import {  Route, Routes, useNavigate } from 'react-router-dom';
 import ListItem from './Common/ListItem';
-import { adminRole, ADMIN_ROLE, authenticate, studentRole, teacherRole, TEACHER_ROLE } from '../roles';
+import { ADMIN_ROLE, authenticate, TEACHER_ROLE } from '../roles';
 import SubjectView from './Subjects/SubjectView';
-import { Get } from './Common/fetcher';
+import Backend from './Common/Backend';
 
 export function Home() {
     const [pageState, setPageState] = useState({ showList: true, editMode: false, editableSub: undefined })
@@ -27,7 +27,7 @@ export function Home() {
 
     useEffect(() => {
         async function loadSubjInfo() {
-            const data = await Get('subject')
+            const data = await Backend.GetInstance().Get('subject')
             setState({ Subjects: data, isLoading: false });
         }
         if (state.isLoading) loadSubjInfo()

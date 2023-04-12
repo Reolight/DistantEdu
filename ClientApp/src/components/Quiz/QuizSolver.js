@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { Get, Post } from '../Common/fetcher'
 import { Button, Pagination, Stack } from '@mui/material'
 import QuestionSolver from "./QuestionSolver";
+import Backend from "../Common/Backend";
 
 // params = 
 export default function QuizSolver(){
@@ -40,7 +40,7 @@ export default function QuizSolver(){
 
     useEffect(()=>{
         async function load(quizId, lessonScoreId){
-            let data = await Get(`answer?quizId=${quizId}&lessonScoreId=${lessonScoreId}`)
+            let data = await Backend.GetInstance().Get(`answer?quizId=${quizId}&lessonScoreId=${lessonScoreId}`)
             if (data === undefined)
                 alert(`Error happened`)
             
@@ -117,7 +117,7 @@ export default function QuizSolver(){
             })
         });
 
-        const repl = await Post(`answer?quizScoreId=${quiz.quizScoreId}`, answers, 
+        const repl = await Backend.GetInstance().Post(`answer?quizScoreId=${quiz.quizScoreId}`, answers, 
             () => {
                 navigate(-1)
             })

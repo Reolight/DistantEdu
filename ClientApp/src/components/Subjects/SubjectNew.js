@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField';
 import { Stack } from "@mui/system";
 import { Button } from "@mui/material";
 import authService from '../api-authorization/AuthorizeService';
-import { Post, Put } from '../Common/fetcher';
+import Backend from '../Common/Backend';
 
 // props is edited subject or undefined + name of teacher
 
@@ -31,8 +31,9 @@ export default function SubjectNew(props) {
 
     async function FetchSubject(e) {
         e.preventDefault();
-        state.isNew? await Post('subject', state.subject, props.onDone)
-                   : await Put(`subject/${state.subject.id}`, state.subject, props.onDone)
+        const backend = Backend.GetInstance()
+        state.isNew? await backend.Post('subject', state.subject, props.onDone)
+                   : await backend.Put(`subject/${state.subject.id}`, state.subject, props.onDone)
     }
 
     if (state.subject === undefined) return <i>Loading...</i>

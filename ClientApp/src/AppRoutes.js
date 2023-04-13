@@ -13,11 +13,8 @@ const AppRoutes = [
   {
     path: '/*',
     index: true,
+    requireAuth: true,
     element: <Home />
-  },
-  {
-    path: '/counter',
-    element: <Counter />
   },
   {
     path: '/subject/:id',

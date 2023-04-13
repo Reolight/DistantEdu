@@ -9,8 +9,8 @@ using System.Security.Claims;
 
 namespace DistantEdu.Controllers
 {
-    [ApiController]
     [Authorize]
+    [ApiController]
     [Route("[controller]")]
     public class SubjectController : ControllerBase
     {

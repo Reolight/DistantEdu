@@ -49,8 +49,34 @@ export default function LessonView(props){
         setState({lesson: undefined, isLoading: true, p: []})
     }
 
+    const logAsStudent = (id, quiz) => 
+    {
+        if (!!quiz.endTime && (quiz.qType === 1 || quiz.qType === 4)) 
+        {
+            alert(`The quiz cannot be retaken due to its limitations`)
+            return;
+        }
+
+        if ((!!quiz.startTime && !!!quiz.endTime)
+            ||
+            window.confirm(`You are about to take a quiz '${quiz.name}'\n`
+                + `${quiz.duration > 0 ? `\tQuiz has time limit ${quiz.duration}\n` : ''}`
+                + `${(quiz.qType === 1 || quiz.qType === 4) ? `\tThis quiz can only be taken once\n.` : ''}`
+                + `${(quiz.qType === 2 || quiz.qType === 4) ? `\tThis quiz affects the passage of the lesson\n` : ''}`
+                + `${(!!quiz.endTime ? `\tYou've completed this quiz. Next attempt will overwrite current one\n` : '')}`
+                + `Proceed?`)) 
+        {
+            navigate(`/quiz_solver/${id}-${state.lesson.lessonScoreId}`)
+        }
+    }
+    
+    const logAsTeacher = (id) => {
+        navigate(`/solved_quizzes/${id}`)
+    }
+
     if (state.isLoading || !state.lesson)
         return <p><i>Loading....</i></p>
+        
     return (<>
     <div>
         <h2>{state.lesson.order + 1}. {state.lesson.name}</h2>
@@ -114,25 +140,7 @@ export default function LessonView(props){
                 role={user.role}
                 editRole={TEACHER_ROLE}
                 removeRole={TEACHER_ROLE}
-                enterQuery={(id) =>{
-                    if (!!quiz.endTime && (quiz.qType === 1 || quiz.qType === 4)){
-                        alert(`The quiz cannot be retaken due to its limitations`)
-                        return;
-                    }
-
-                    if ((!!quiz.startTime && !!!quiz.endTime)
-                            ||
-                        window.confirm(`You are about to take a quiz '${quiz.name}'\n`
-                        +`${quiz.duration > 0 ? `\tQuiz has time limit ${quiz.duration}\n` : ''}`
-                        +`${(quiz.qType === 1 || quiz.qType === 4) ? `\tThis quiz can only be taken once\n.` : ''}`
-                        +`${(quiz.qType === 2 || quiz.qType === 4) ? `\tThis quiz affects the passage of the lesson\n` : ''}`
-                        +`${(!!quiz.endTime ? `\tYou've completed this quiz. Next attempt will overwrite current one\n` : '')}`
-                        +`Proceed?`))
-                    {
-                        navigate(`/quiz_solver/${id}-${state.lesson.lessonScoreId}`)
-                    }
-                }}
-
+                enterQuery={(id) => authenticate(user.role, TEACHER_ROLE)? logAsTeacher(id) : logAsStudent(id, quiz)}
                 editQuery={ (id) => { navigate(`/quiz/new/${state.lesson.lessonId}-${id}`) }}
 
                 style={

@@ -1,5 +1,6 @@
 import Aezakmi from './components/Aezakmi';
 import ApiAuthorzationRoutes from './components/api-authorization/ApiAuthorizationRoutes';
+import TeacherControl from './components/Control/TeacherControl';
 import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
@@ -42,6 +43,11 @@ const AppRoutes = [
       path: '/quiz_solver/:params',
       requireAuth: true,
       element: <QuizSolver />
+    },
+    {
+      path: 'solved_quizzes/:id',
+      requireAuth: true,
+      element: <TeacherControl />
     },
   ...ApiAuthorzationRoutes
 ];

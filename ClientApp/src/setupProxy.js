@@ -16,7 +16,8 @@ const context = [
     "/Toggler",
     "/lesson",
     "/quiz",
-    "/answer"
+    "/answer",
+    "/teacher"
 ];
 
 const onError = (err, req, resp, target) => {

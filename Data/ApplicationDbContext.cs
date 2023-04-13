@@ -12,8 +12,9 @@ namespace DistantEdu.Data
     public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
     {
         public DbSet<StudentProfile> StudentProfiles { get; set; }
-        public DbSet<QuizScore> QuizScores { get; set; }
+        //public DbSet<SubjectSubscription> Subscriptions { get; set; }
         public DbSet<LessonScore> LessonScores { get; set; }
+        public DbSet<QuizScore> QuizScores { get; set; }
         
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Lesson> Lessons { get; set; }

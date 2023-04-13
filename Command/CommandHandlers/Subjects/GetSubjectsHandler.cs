@@ -18,7 +18,7 @@ namespace DistantEdu.Command.CommandHandlers.Subjects
             var subjects = await _db.Subjects
                 .AsNoTracking()
                 .Take(25)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             var subscriptions = _db.StudentProfiles
                 .AsNoTracking()

@@ -26,11 +26,12 @@ export default function TeacherControl() {
             });
         }
 
-        if (!!!state && !state.isReady || !!!user)
+        if (!state.isReady || !!!user)
             load()
-    }, [id])
+        console.log(state)
+    }, [id, state])
 
-    if (!!!state && !state.isReady)
+    if (!state.isReady && !!!state.quizInfo)
         return <p><i>Loading...</i></p>
 
     return(<>
@@ -49,9 +50,9 @@ export default function TeacherControl() {
                 }
 
                 style={
-                    quiz.score > 0? 
+                    !!quiz.endTime? 
                         {backgroundColor: "#cefad0"}:
-                        quiz.startTime === undefined?
+                        !!quiz.startTime?
                             {backgroundColor: '#ffff9f'}:
                             {backgroundColor: "#f6f6f6"}
                 }                

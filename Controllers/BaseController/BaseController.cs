@@ -18,9 +18,7 @@ namespace DistantEdu.Controllers.BaseController
         protected ApplicationDbContext Context =>
             _context ??= HttpContext.RequestServices.GetService<ApplicationDbContext>()!;
 
-        internal Guid UserId => !User.Identity.IsAuthenticated
-            ? Guid.Empty 
-            : Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
+        internal string UserName => User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name : { }} userName?
+            string.Empty : userName.Subject.Name;
     }
 }

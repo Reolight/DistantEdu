@@ -19,15 +19,11 @@ namespace DistantEdu.Controllers
     public class QuizController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly QuizService _quizService;
-        private readonly LessonService _lessonService;
-        public QuizController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, QuizService quizService, LessonService lessonService)
+        public QuizController(ApplicationDbContext context, QuizService quizService)
         {
             _context = context;
-            _userManager = userManager;
             _quizService = quizService;
-            _lessonService = lessonService;
         }
 
         [HttpPost]

@@ -4,6 +4,7 @@ using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Types;
 using DistantEdu.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
@@ -109,6 +110,7 @@ namespace DistantEdu.Services
             quizVm.QuizScoreId = quizScore.Id;
             quizVm.StartTime = quizScore.StartTime;
             quizVm.EndTime = quizScore.EndTime;
+            quizVm.Score = quizScore.Score;
             return quizVm;
         }
 
@@ -168,11 +170,11 @@ namespace DistantEdu.Services
         /// <returns>Shallow quiz info without questions inside + user score if found</returns>
         public async Task<QuizViewModel?> GetShallowQuizInfoAsync(int quizId, int? lessonScoreId)
         {
-            if (await GetQuizViewModelWrappedByLoggerAsync(quizId, isShallow: true) is not { } quiz)
+            if (await GetQuizViewModelWrappedByLoggerAsync(quizId, isShallow: true) is not { } quizVm)
                 return null;
-            return lessonScoreId is not null? 
-                await AttachShallowQuizScoreToQuizVmAsync(quiz, (int)lessonScoreId)
-                : quiz;
+            return lessonScoreId is not null ?
+                await AttachShallowQuizScoreToQuizVmAsync(quizVm, (int)lessonScoreId)
+                : quizVm;
         }
 
         public async Task<QuizViewModel?> GetDeepQuizInfoAsync(int quizId, int lessonScoreId)

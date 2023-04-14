@@ -83,7 +83,6 @@ export default function QuizSolver(){
                 setQuiz((prev) => {
                     const arr = [...prev.questions[page-1].replies];
                     arr[id].isSelected = !arr[id].isSelected
-                    console.log(`asdfasdfafd`)
                     prev.questions[page-1].replies = arr;
                     return {...prev}
                 })

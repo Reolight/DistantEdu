@@ -146,7 +146,7 @@ export default function LessonView(props){
                         {quiz.startTime && <p><b>Started:</b> {new Date(quiz.startTime).toLocaleString()}
                             {quiz.endTime && <> - <b>finished</b> {new Date(quiz.endTime).toLocaleString()}</>}
                         </p>}
-                        {!!quiz.endTime && <p><b>Score</b>:{quiz.score}</p>}
+                        {!!quiz.endTime && <p><b>Score</b>: {quiz.score}%</p>}
                     </>)}
                 }
 

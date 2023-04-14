@@ -1,8 +1,6 @@
 import Aezakmi from './components/Aezakmi';
 import ApiAuthorzationRoutes from './components/api-authorization/ApiAuthorizationRoutes';
 import TeacherControl from './components/Control/TeacherControl';
-import { Counter } from "./components/Counter";
-import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
 import LessonView from './components/Lessons/LessonView';
 import QuizNew from './components/Quiz/QuizNew';

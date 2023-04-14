@@ -11,6 +11,7 @@ namespace DistantEdu.ViewModels
         public string Description { get; set; } = string.Empty;
         public List<LessonViewModel> Lessons { get; set; } = new();
 
+        public int Progress { get; set; } = 0;
         public SubjectViewModel() { }
         public SubjectViewModel(Subject subject) {
             Id = subject.Id;

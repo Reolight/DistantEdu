@@ -55,9 +55,11 @@ export function Home() {
                             editRole={TEACHER_ROLE}
                             removeRole={ADMIN_ROLE}
                             enterQuery={(id) => {
-                                const enteringdSub = state.Subjects.find(s => s.id === id);
-                                if (enteringdSub.subscriptionId === undefined && !window.confirm(`You are not subscribed. Subscribe and enter?`))
-                                    return;
+                                const enteringdSub = state.Subjects.find(s => s.id === id); 
+                                
+                                if (!authenticate(user.role, TEACHER_ROLE))
+                                    if (!enteringdSub.subscriptionId && !window.confirm(`You are not subscribed. Subscribe and enter?`))
+                                        return;
                                 navigate(`/subject/${enteringdSub.id}`)
                             } }
                             editQuery={editChild}

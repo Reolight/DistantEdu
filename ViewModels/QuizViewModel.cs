@@ -7,8 +7,8 @@ namespace DistantEdu.ViewModels
     public class QuizViewModel
     {
         public int QuizId { get; set; }
-        public int QuizScoreId { get; set; }
-        public double Score { get; set; }
+        public int? QuizScoreId { get; set; }
+        public double? Score { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int Duration { get; set; }

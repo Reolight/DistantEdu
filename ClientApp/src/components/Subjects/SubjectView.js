@@ -53,7 +53,7 @@ export default function SubjectView() {
             <p><i>Author: {state.subject.author}</i></p>
 
             <p>{state.subject.description}</p>
-            
+            {state.subject.progress > 0? <p><i>Subject progress: {state.subject.progress}%</i></p>: <></>}
             <div>
                 {state.subject.lessons.map(lesson => {
                         return <ListItem

@@ -5,6 +5,7 @@ using DistantEdu.Types;
 using DistantEdu.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DistantEdu.Services
 {
@@ -165,11 +166,13 @@ namespace DistantEdu.Services
         /// Finds quest with specified Id in database and tries to find score for it.
         /// </summary>
         /// <returns>Shallow quiz info without questions inside + user score if found</returns>
-        public async Task<QuizViewModel?> GetShallowQuizInfoAsync(int quizId, int lessonScoreId)
+        public async Task<QuizViewModel?> GetShallowQuizInfoAsync(int quizId, int? lessonScoreId)
         {
             if (await GetQuizViewModelWrappedByLoggerAsync(quizId, isShallow: true) is not { } quiz)
                 return null;
-            return await AttachShallowQuizScoreToQuizVmAsync(quiz, lessonScoreId);
+            return lessonScoreId is not null? 
+                await AttachShallowQuizScoreToQuizVmAsync(quiz, (int)lessonScoreId)
+                : quiz;
         }
 
         public async Task<QuizViewModel?> GetDeepQuizInfoAsync(int quizId, int lessonScoreId)

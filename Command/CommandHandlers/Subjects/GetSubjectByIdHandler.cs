@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using DistantEdu.Data;
 using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.Services;
-using Duende.IdentityServer.EntityFramework.Entities;
+using Microsoft.AspNetCore.Identity;
+using DistantEdu.Models;
+using DistantEdu.Models.SubjectFeature;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DistantEdu.Command.CommandHandlers.Subjects
 {
@@ -12,32 +15,22 @@ namespace DistantEdu.Command.CommandHandlers.Subjects
     {
         private readonly ApplicationDbContext _context;
         private readonly LessonService _lessonService;
-        public GetSubjectByIdHandler(ApplicationDbContext context, LessonService lessonService)
-            => (_context, _lessonService) = (context, lessonService);
-
-        public async Task<SubjectViewModel> Handle(GetSubjectByIdQuery query, CancellationToken cancellationToken)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public GetSubjectByIdHandler(ApplicationDbContext context, LessonService lessonService, UserManager<ApplicationUser> userManager)
         {
-            var subject = await _context.Subjects
-                .Include(s => s.Lessons)
-                .AsNoTracking()
-                .FirstAsync(s => s.Id == query.Id);
-            StudentProfile profile = await _context.StudentProfiles
-                .Include(profile => profile.SubjectSubscriptions)
-                .FirstOrDefaultAsync(sp => sp.Name == query.UserName)
-                ?? new StudentProfile
-                {
-                    Name = query.UserName,
-                    SubjectSubscriptions = new()
-                };
+            (_context, _lessonService, _userManager) = (context, lessonService, userManager);
+        }
 
-            var subscription = profile.SubjectSubscriptions.Find(ss => ss.SubjectId == query.Id);
+        private async Task<SubjectSubscription> SubscribeIfNot(StudentProfile profile, Subject subject, int Id)
+        {
+            var subscription = profile.SubjectSubscriptions.Find(ss => ss.SubjectId == Id);
 
             if (subscription is null)
             {
                 subscription = new SubjectSubscription
                 {
                     LessonScores = new(),
-                    SubjectId = query.Id
+                    SubjectId = Id
                 };
 
                 profile.SubjectSubscriptions.Add(subscription);
@@ -46,14 +39,65 @@ namespace DistantEdu.Command.CommandHandlers.Subjects
 
             await _context.SaveChangesAsync();
 
-            return new SubjectViewModel(subject)
+            return subscription;
+        }
+
+        private async Task<Subject> RetrieveSubject(int id, CancellationToken cancellationToken)
+            => await _context.Subjects
+                .Include(s => s.Lessons)
+                .AsNoTracking()
+                .FirstAsync(s => s.Id == id, cancellationToken);
+
+        private async Task<StudentProfile> RetrieveStudentProfile(string userName, CancellationToken cancellationToken)
+        {
+            var studProf = await _context.StudentProfiles
+                    .Include(profile => profile.SubjectSubscriptions)
+                    .FirstOrDefaultAsync(sp => sp.Name == userName);
+            if (studProf is not null)
+                return studProf;
+
+            studProf = new StudentProfile
             {
-                SubscriptionId = subscription.Id,
-                Lessons = subject.Lessons.Select(lesson =>
-                    _lessonService.GetShallowLessonAsync(lesson.Id, profile.Name).Result)
-                        .OfType<LessonViewModel>()
-                        .ToList()
+                Name = userName,
+                SubjectSubscriptions = new()
             };
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return studProf;
+        }
+
+        private async Task<bool> IsAStudent(string userName)
+            => await _userManager.FindByNameAsync(userName) is not { } user ||
+               await _userManager.IsInRoleAsync(user, Roles.Student);
+
+        private List<LessonViewModel> GetLessons(Subject subject, string name)
+        => subject.Lessons.Select(lesson =>
+                _lessonService.GetShallowLessonAsync(lesson.Id, name).Result)
+                .OfType<LessonViewModel>()
+                .ToList();
+
+        private int CalculatePassProgression(List<LessonViewModel> lessonsVm)
+        {
+            float passed = 0f;
+            foreach (var lessonVm in lessonsVm)
+            {
+                if (lessonVm.IsPassed is true) passed++;
+            }
+
+            return (int)(passed / lessonsVm.Count * 100);
+        }
+        public async Task<SubjectViewModel> Handle(GetSubjectByIdQuery query, CancellationToken cancellationToken)
+        {
+            var subject = await RetrieveSubject(query.Id, cancellationToken);
+            StudentProfile profile = await RetrieveStudentProfile(query.UserName, cancellationToken);
+            bool isStudent = await IsAStudent(query.UserName);
+            SubjectViewModel subjVm = new SubjectViewModel(subject);
+            if (isStudent)
+                subjVm.SubscriptionId = (await SubscribeIfNot(profile, subject, query.Id)).Id;
+            subjVm.Lessons = GetLessons(subject, query.UserName);
+            if (isStudent && subjVm.Lessons.Count > 0)
+                subjVm.Progress = CalculatePassProgression(subjVm.Lessons);
+            return subjVm;
         }
     }
 }

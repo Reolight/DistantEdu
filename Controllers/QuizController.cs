@@ -42,7 +42,9 @@ namespace DistantEdu.Controllers
 
             quiz.Questions = quiz.Questions.Except(queriesWithErrors).ToList();
             bool isReadyForUse = quiz.Questions.Count >= quiz.Count;
-            await _context.Quizzes.AddAsync(quiz);
+            if (await _context.Lessons.FirstOrDefaultAsync(les => les.Id == quiz.LessonId) is not {} lesson)
+                return BadRequest($"Lesson with Id [{quiz.LessonId}] not found");
+            lesson.Tests.Add(quiz);
             await _context.SaveChangesAsync();
             return Ok(new {
                 isReady = isReadyForUse,

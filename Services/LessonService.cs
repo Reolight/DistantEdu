@@ -1,11 +1,14 @@
 ﻿using DistantEdu.Data;
+using DistantEdu.Models;
 using DistantEdu.Models.StudentProfileFeature;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Types;
 using DistantEdu.ViewModels;
 using Humanizer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
+using Microsoft.DotNet.Scaffolding.Shared.ProjectModel;
 using Microsoft.EntityFrameworkCore;
 
 namespace DistantEdu.Services
@@ -15,11 +18,22 @@ namespace DistantEdu.Services
         private readonly ApplicationDbContext _context;
         private readonly QuizService _quizService;
         private readonly ILogger<LessonService> _logger;
-        public LessonService(ApplicationDbContext context, QuizService quizService, ILogger<LessonService> logger)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public LessonService(ApplicationDbContext context, QuizService quizService,
+            ILogger<LessonService> logger, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _quizService = quizService;
             _logger = logger;
+            _userManager = userManager;
+        }
+
+        private async Task<bool> IsStudent(string userName)
+        {
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user is not null) 
+                return await _userManager.IsInRoleAsync(user, Roles.Student);
+            return false;
         }
 
         private async Task<LessonScore?> GetLessonScoreAsync(Lesson lesson, string userName)
@@ -34,8 +48,10 @@ namespace DistantEdu.Services
                 .SelectMany(ss => ss.LessonScores)
                 .FirstOrDefault(lessonScore => lessonScore.LessonId == lesson.Id);
 
-            if (lessonScore is not null)
+            if (lessonScore is not null || !await IsStudent(userName))
                 return lessonScore;
+
+            // if student and lesson score is null
             lessonScore = new LessonScore
             {
                 LessonId = lesson.Id,
@@ -49,13 +65,10 @@ namespace DistantEdu.Services
             return lessonScore;
         }
 
-        private async Task<(Lesson, LessonScore)?> GetLessonAndScoreAsync(int lessonId, string userName){
-            if (await _context.Lessons.FindAsync(lessonId) is not { } lesson ||
-                await GetLessonScoreAsync(lesson, userName) is not { } lessonScore)
-            {
-                return null;
-            }
-
+        private async Task<(Lesson?, LessonScore?)> GetLessonAndScoreAsync(int lessonId, string userName){
+            var lesson = await _context.Lessons.FindAsync(lessonId);
+            if (lesson is null) return (null, null);
+            var lessonScore = await GetLessonScoreAsync(lesson, userName);
             return (lesson, lessonScore);
         }
 
@@ -80,7 +93,7 @@ namespace DistantEdu.Services
         /// <returns>Deep lesson view model with Content and Quizzes initialized. Used for LessonView component.</returns>
         public async Task<LessonViewModel?> GetLessonAsync(int lessonId, string userName)
         {
-            if (await GetLessonAndScoreAsync(lessonId, userName) is not { } lessonInfo)
+            if (await GetLessonAndScoreAsync(lessonId, userName) is not { Item1: { } } lessonInfo)
                 return null;
             return MergeInLessonViewModel(lessonInfo.Item1, lessonInfo.Item2);
         }
@@ -98,40 +111,40 @@ namespace DistantEdu.Services
         /// <returns>Shallow lesson view model without Content property (string.Empty by default) and Quizzes initialized 
         /// as empty collection. Used for displaying in list of lessons </returns>
         public async Task<LessonViewModel?> GetShallowLessonAsync(int lessonId, string userName){
-            if (await GetLessonAndScoreAsync(lessonId, userName) is not { } lessonInfo)
+            if (await GetLessonAndScoreAsync(lessonId, userName) is not { Item1: { } } lessonInfo)
                 return null;
             return MergeInShallowLessonViewModel(lessonInfo.Item1, lessonInfo.Item2);
         }
 
-        private static LessonViewModel MergeInShallowLessonViewModel(Lesson lesson, LessonScore lessonScore)
+        private static LessonViewModel MergeInShallowLessonViewModel(Lesson lesson, LessonScore? lessonScore)
             => new(){
                 LessonId = lesson.Id,
-                LessonScoreId = lessonScore.Id,
+                LessonScoreId = lessonScore?.Id,
                 Name = lesson.Name,
                 Description = lesson.Description,
                 Order = lesson.Order,
                 Condition = lesson.Condition,
                 SubjectId = lesson.SubjectId,
-                SubscriptionId = lessonScore.SubjectSubscriptionId,
-                IsPassed = lessonScore.IsPassed,
+                SubscriptionId = lessonScore?.SubjectSubscriptionId,
+                IsPassed = lessonScore?.IsPassed,
                 Quizzes = new()
             };
 
-        private LessonViewModel MergeInLessonViewModel(Lesson lesson, LessonScore lessonScore)
+        private LessonViewModel MergeInLessonViewModel(Lesson lesson, LessonScore? lessonScore)
             => new()
             {
                 LessonId = lesson.Id,
-                LessonScoreId = lessonScore.Id,
+                LessonScoreId = lessonScore?.Id,
                 Name = lesson.Name,
                 Description = lesson.Description,
                 Order = lesson.Order,
                 Content = lesson.Content,
                 Condition = lesson.Condition,
                 SubjectId = lesson.SubjectId,
-                SubscriptionId = lessonScore.SubjectSubscriptionId,
-                IsPassed = lessonScore.IsPassed,
+                SubscriptionId = lessonScore?.SubjectSubscriptionId,
+                IsPassed = lessonScore?.IsPassed,
                 Quizzes = lesson.Tests.Where(quiz => quiz.Questions.Count >= quiz.Count)
-                    .Select(q => _quizService.GetShallowQuizInfoAsync(q.Id, lessonScore.Id))
+                    .Select(q => _quizService.GetShallowQuizInfoAsync(q.Id, lessonScore?.Id))
                     .Select(t => t.Result)
                     .OfType<QuizViewModel>()
                     .ToList()

@@ -14,15 +14,10 @@ export default function QuizSolver(){
     const [timeLeft, setTimeLeft] = useState()
     const [quiz, setQuiz] = useState(undefined);
 
-    function CalculateTimeLeft(startTime, duration){ 
-        const elapsedSec = Math.floor(new Date().getTime() - startTime.getTime()) / 1000;
-        const leftSec = duration * 60 - elapsedSec;
+    function CalculateTimeLeft(){ 
+        const elapsedSec = Math.floor(new Date().getTime() - quiz.startTime.getTime()) / 1000;
+        const leftSec = quiz.duration * 60 - elapsedSec;
         console.log(`elapsed: `, elapsedSec, ` left: `, leftSec)
-        if (leftSec < 0){
-            alert(`quiz is already expired`);
-            post();
-            return;
-        }
 
         setTimeLeft(
         {
@@ -30,6 +25,12 @@ export default function QuizSolver(){
             mins: pad(Math.floor(leftSec / 60 % 60), 2),
             secs: pad(Math.floor(leftSec % 60), 2)
         })
+
+        if (leftSec < 0){
+            alert(`quiz is expired`);
+            post();
+            return;
+        }
     }
 
     function pad(num, size) {
@@ -46,10 +47,6 @@ export default function QuizSolver(){
             
                 // cuz it not date obj
             data = {...data, startTime: new Date(data.startTime) } 
-
-            if (data.duration > 0){
-                CalculateTimeLeft(data.startTime, data.duration)
-            }
 
             setQuiz(data)
         }

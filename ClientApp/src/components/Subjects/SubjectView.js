@@ -2,7 +2,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { authenticate, TEACHER_ROLE } from '../../roles';
 import authService from '../api-authorization/AuthorizeService';
-import { Button } from "@mui/material";
+import { Button, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import ListItem from '../Common/ListItem';
 import LessonNew from '../Lessons/LessonNew';
 import Backend from '../Common/Backend';
@@ -48,12 +48,23 @@ export default function SubjectView() {
     return (
         <div>
             {!pageState.editMode && (<>
-            
-            <h2>{state.subject.name}</h2>
-            <p><i>Author: {state.subject.author}</i></p>
+            <Paper elevation={12} sx={{my: 4, p: 4, borderRadius: 4}}>
+                <Stack direction={'column'} spacing={2} >
+                    <Typography variant='h3'>{state.subject.name}</Typography>
+                    <Typography><i>Author: {state.subject.author}</i></Typography>
 
-            <p>{state.subject.description}</p>
-            {state.subject.progress > 0? <p><i>Subject progress: {state.subject.progress}%</i></p>: <></>}
+                    <Typography>{state.subject.description}</Typography>
+                    {state.subject.progress > 0? <Stack direction={'row'} spacing={2} alignItems={'center'} >
+                        <Typography>Progress: {state.subject.progress}%</Typography>
+                        <LinearProgress 
+                            sx={{width: '50%', height: '1.5vh'}}
+                            variant='determinate' 
+                            value={state.subject.progress} 
+                        />
+                    </Stack> : <></>}
+                </Stack>
+            </Paper>
+
             <div>
                 {state.subject.lessons.map(lesson => {
                         return <ListItem

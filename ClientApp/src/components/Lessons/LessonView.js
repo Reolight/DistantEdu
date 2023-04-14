@@ -2,7 +2,7 @@ import { style } from "@mui/system";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ListItem from "../Common/ListItem";
-import { Button, Stack, TextField } from "@mui/material";
+import { Button, Stack, TextField, Typography } from "@mui/material";
 import { TEACHER_ROLE, authenticate } from "../../roles";
 import authService from "../api-authorization/AuthorizeService";
 import Backend from "../Common/Backend";
@@ -74,19 +74,33 @@ export default function LessonView(props){
         navigate(`/solved_quizzes/${id}`)
     }
 
+    function GetPassConditionText(){
+        switch (state.lesson.condition){
+            case 0:
+                return 'read';
+            case 1:
+                return 'take one test';
+            case 2:
+                return 'take all key tests';
+            case 3:
+                return 'take all tests';
+        }
+    }
+
     if (state.isLoading || !state.lesson)
         return <p><i>Loading....</i></p>
         
     return (<>
     <div>
-        <h2>{state.lesson.order + 1}. {state.lesson.name}</h2>
+        <Typography variant="h4">{state.lesson.order + 1}. {state.lesson.name}</Typography>
+        <Typography sx={{mb: 2}}><i>Condition to pass this lesson: {GetPassConditionText()}</i></Typography>
         <>
-            {authenticate(user.role, TEACHER_ROLE) && <>
             {!contentEdit?
                 <Stack direction={'column'} >
-                    {state.lesson.content}
-                    <Button color='primary' onClick={ () => setContentEdit(true)
-                        }>Edit</Button>
+                    <Typography>{state.lesson.content}</Typography>
+                    {authenticate(user.role, TEACHER_ROLE) && <Button
+                        color='primary'
+                        onClick={ () => setContentEdit(true)}>Edit</Button>}
                 </Stack>
                 :
                 <Stack direction={"column"} >
@@ -113,7 +127,7 @@ export default function LessonView(props){
                         () => setContentEdit(false))
                     }}>Save</Button>
                 </Stack>
-            }</>}
+            }
         </>
 
         <br/>

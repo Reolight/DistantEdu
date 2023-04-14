@@ -319,7 +319,7 @@ namespace DistantEdu.Services
             foreach (QuestionViewModel questionVm in questionViewModels)
             {
                 yield return new QueryReplied {
-                    IsCorrect = Types.CorrectGrades.Unreplied,
+                    IsCorrect = CorrectGrades.Unreplied,
                     IsReplied = false,
                     QueryId = questionVm.QueryId,
                     Answers = BuildAnswersTemplate(questionVm.Replies).ToList()
@@ -397,7 +397,7 @@ namespace DistantEdu.Services
         private double GetScore(Query query, QueryReplied queryReplied)
         {
             int matches = 0;
-
+            
             foreach (Replied replied in queryReplied.Answers)
             {
                 var reply = query.Replies.First(repl => repl.Id == replied.ReplyId);
@@ -415,7 +415,6 @@ namespace DistantEdu.Services
                 _ => CorrectGrades.PartiallyCorrect,
             };
 
-        // 
         private void CalculateScore(QuizScore quizScore, Quiz quiz)
         {
             // a value with range of [0; quiz.Count]
@@ -436,7 +435,8 @@ namespace DistantEdu.Services
                 questionReplied.IsCorrect = GetCorrectGrade(isStrict, in answerScore);
             }
 
-            quizScore.Score = score;
+            // percent calculation with 2 digits precision.
+            quizScore.Score = Math.Round(score / quizScore.QueryReplieds.Count * 100, 2);
             quizScore.EndTime = DateTimeOffset.UtcNow;
         }
 

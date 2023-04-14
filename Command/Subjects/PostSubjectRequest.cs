@@ -1,7 +1,7 @@
 ﻿using DistantEdu.ViewModels;
 using MediatR;
 
-namespace DistantEdu.Command.CommandHandlers.Subjects
+namespace DistantEdu.Command.Subjects
 {
     public class PostSubjectRequest : IRequest<Unit>
     {

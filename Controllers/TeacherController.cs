@@ -1,4 +1,4 @@
-using DistantEdu.Command.CommandHandlers.Quizzes;
+using DistantEdu.Command.Quizzes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

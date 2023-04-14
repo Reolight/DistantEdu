@@ -1,10 +1,9 @@
-﻿using System;
-using System.Security.Claims;
-using DistantEdu.Data;
+﻿using DistantEdu.Data;
+using DistantEdu.Models;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic;
+using System.Security.Claims;
 
 namespace DistantEdu.Controllers
 {
@@ -16,13 +15,26 @@ namespace DistantEdu.Controllers
     public class BaseController : ControllerBase
     {
         private ApplicationDbContext? _context;
+        private UserManager<ApplicationUser> _userManager = null!;
+        private IMediator? _mediator;
+
         protected ApplicationDbContext Context =>
             _context ??= HttpContext.RequestServices.GetService<ApplicationDbContext>()!;
-
-        private IMediator? _mediator;
         protected IMediator Mediator => _mediator ??= HttpContext.RequestServices.GetService<IMediator>()!;
 
         internal string UserName => User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name : { }} userName?
             string.Empty : userName.Subject.Name;
+
+        protected UserManager<ApplicationUser> UserManagerInstance =>
+            _userManager ??= HttpContext.RequestServices.GetService<UserManager<ApplicationUser>>()!;
+
+        protected ApplicationUser? _currentUser;
+        protected async Task<ApplicationUser?> GetAppUserAsync() => 
+            _currentUser ??= await UserManagerInstance.FindByNameAsync(UserName);
+
+        protected async Task<bool> isInRoleAsync(string role)
+            => await GetAppUserAsync() is not { } user ?
+                false :
+                await UserManagerInstance.IsInRoleAsync(user, role);
     }
 }

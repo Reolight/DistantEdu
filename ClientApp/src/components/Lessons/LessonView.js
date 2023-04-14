@@ -80,7 +80,6 @@ export default function LessonView(props){
     return (<>
     <div>
         <h2>{state.lesson.order + 1}. {state.lesson.name}</h2>
-        <p><i>{state.lesson.condition}</i></p>
         <>
             {authenticate(user.role, TEACHER_ROLE) && <>
             {!contentEdit?
@@ -109,8 +108,8 @@ export default function LessonView(props){
                         }}
                     />
                     <Button color='primary' onClick={async () => {
-                        await Backend.GetInstance().Patch(`lesson?lessonId=${state.lesson.lessonId}`, 
-                        { content: state.lesson.content },
+                        await Backend.GetInstance().Put(`lesson?contentUpdate=${true}`, 
+                        { ...state.lesson, id: state.lesson.lessonId},
                         () => setContentEdit(false))
                     }}>Save</Button>
                 </Stack>

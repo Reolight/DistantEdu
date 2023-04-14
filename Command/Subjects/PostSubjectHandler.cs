@@ -2,7 +2,7 @@
 using DistantEdu.Models.SubjectFeature;
 using MediatR;
 
-namespace DistantEdu.Command.CommandHandlers.Subjects
+namespace DistantEdu.Command.Subjects
 {
     public class PostSubjectHandler : IRequestHandler<PostSubjectRequest, Unit>
     {

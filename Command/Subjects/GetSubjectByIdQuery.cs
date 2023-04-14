@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using DistantEdu.ViewModels;
 
-namespace DistantEdu.Command.CommandHandlers.Subjects
+namespace DistantEdu.Command.Subjects
 {
     public class GetSubjectByIdQuery : IRequest<SubjectViewModel>
     {

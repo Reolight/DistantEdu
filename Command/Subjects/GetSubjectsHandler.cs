@@ -3,7 +3,7 @@ using DistantEdu.ViewModels;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace DistantEdu.Command.CommandHandlers.Subjects
+namespace DistantEdu.Command.Subjects
 {
     public class GetSubjectsHandler : IRequestHandler<GetSubjectQuery, IEnumerable<SubjectViewModel>>
     {

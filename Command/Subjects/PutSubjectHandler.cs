@@ -3,7 +3,7 @@ using DistantEdu.Models.SubjectFeature;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace DistantEdu.Command.CommandHandlers.Subjects
+namespace DistantEdu.Command.Subjects
 {
     public class PutSubjectHandler : IRequestHandler<PutSubjectRequest, Unit>
     {

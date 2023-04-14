@@ -1,7 +1,7 @@
 ﻿using DistantEdu.ViewModels;
 using MediatR;
 
-namespace DistantEdu.Command.CommandHandlers.Quizzes
+namespace DistantEdu.Command.Quizzes
 {
     public class QuizInfoQuery : IRequest<List<SolvedQuizViewModel>>
     {

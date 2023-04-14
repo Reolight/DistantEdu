@@ -1,4 +1,4 @@
-﻿using DistantEdu.Command.CommandHandlers.Subjects;
+﻿using DistantEdu.Command.Subjects;
 using DistantEdu.Data;
 using DistantEdu.ViewModels;
 using MediatR;

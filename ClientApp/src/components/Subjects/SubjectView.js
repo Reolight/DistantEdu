@@ -79,6 +79,7 @@ export default function SubjectView() {
                             
                             editQuery={ editChild }
                             removeQuery={(id) => console.log(`remove was pressed but nothing happened)))`)}
+                            style={ lesson.isPassed? {backgroundColor: "#cefad0"} : {}}
                         />
                     })}
             </div>

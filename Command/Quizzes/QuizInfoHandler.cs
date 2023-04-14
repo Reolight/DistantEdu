@@ -4,7 +4,7 @@ using DistantEdu.ViewModels;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace DistantEdu.Command.CommandHandlers.Quizzes
+namespace DistantEdu.Command.Quizzes
 {
     public class QuizInfoHandler : IRequestHandler<QuizInfoQuery, List<SolvedQuizViewModel>>
     {

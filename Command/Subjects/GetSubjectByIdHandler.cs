@@ -9,7 +9,7 @@ using DistantEdu.Models;
 using DistantEdu.Models.SubjectFeature;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
-namespace DistantEdu.Command.CommandHandlers.Subjects
+namespace DistantEdu.Command.Subjects
 {
     public class GetSubjectByIdHandler : IRequestHandler<GetSubjectByIdQuery, SubjectViewModel>
     {
@@ -35,9 +35,9 @@ namespace DistantEdu.Command.CommandHandlers.Subjects
 
                 profile.SubjectSubscriptions.Add(subscription);
                 subject.SubjectSubscription.Add(subscription);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
 
             return subscription;
         }
@@ -67,8 +67,13 @@ namespace DistantEdu.Command.CommandHandlers.Subjects
         }
 
         private async Task<bool> IsAStudent(string userName)
-            => await _userManager.FindByNameAsync(userName) is not { } user ||
-               await _userManager.IsInRoleAsync(user, Roles.Student);
+        {
+            if (await _userManager.FindByNameAsync(userName) is not { } user)
+                return false;
+            var roles = await _userManager.GetRolesAsync(user);
+            var isStudent = await _userManager.IsInRoleAsync(user, Roles.Student);
+            return isStudent;
+        }
 
         private List<LessonViewModel> GetLessons(Subject subject, string name)
         => subject.Lessons.Select(lesson =>
@@ -91,7 +96,7 @@ namespace DistantEdu.Command.CommandHandlers.Subjects
             var subject = await RetrieveSubject(query.Id, cancellationToken);
             StudentProfile profile = await RetrieveStudentProfile(query.UserName, cancellationToken);
             bool isStudent = await IsAStudent(query.UserName);
-            SubjectViewModel subjVm = new SubjectViewModel(subject);
+            SubjectViewModel subjVm = new(subject);
             if (isStudent)
                 subjVm.SubscriptionId = (await SubscribeIfNot(profile, subject, query.Id)).Id;
             subjVm.Lessons = GetLessons(subject, query.UserName);

@@ -5,6 +5,7 @@ import { TEACHER_ROLE, authenticate } from "../../roles";
 import { Button, Card, FormControl, InputLabel, MenuItem, Pagination, Select, Stack, TextField } from "@mui/material";
 import QueryNew from "./QueryNew";
 import Backend from "../Common/Backend";
+import { SaveItem, GetItem, RemoveItem } from "../Common/savior";
 
 // params = lessonId, quizId?
 export default function QuizNew(){
@@ -45,8 +46,7 @@ export default function QuizNew(){
 
     useEffect(() => {
         if (state.isReady) return;
-        const quizJson = localStorage.getItem(`quiz${params.split('-', 2)[0]}`);
-        const quiz = JSON.parse(quizJson)
+        const quiz = GetItem(`quiz${params.split('-', 2)[0]}`)
         setState(
             {
                 ...state,
@@ -67,7 +67,7 @@ export default function QuizNew(){
     useEffect(() => {
         console.log(state.quiz)
         if (!!state.quiz){ 
-            localStorage.setItem(`quiz${id}`, JSON.stringify(state.quiz))
+            SaveItem(`quiz${id}`, state.quiz)
         }
     }, [state.quiz])
 
@@ -225,7 +225,7 @@ export default function QuizNew(){
         const response = await Backend.GetInstance().Post('quiz', state.quiz, () => navigate(-1));
         if (response.ok){
             alert('Quiz posted and will be removed from local storage');
-            localStorage.removeItem(`quiz${id}`);
+            RemoveItem(`quiz${id}`);
         } else {
             alert(`Something got wrong. Status: ${response.status}`)
         }

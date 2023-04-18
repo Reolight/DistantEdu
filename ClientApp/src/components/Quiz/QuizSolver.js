@@ -94,7 +94,7 @@ export default function QuizSolver(){
             onClick={() => post(true)}
         >Finish quiz</Button>
         
-        <Pagination page={page} count={quiz.questions.length} onChange={(e, v) => setPage(v)}/>
+        <Pagination page={page} count={quiz.questions.length} onChange={(e, v) =>  setPage(v)}/>
     </Stack>
     </>)
 

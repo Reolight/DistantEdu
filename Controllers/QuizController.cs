@@ -29,8 +29,16 @@ namespace DistantEdu.Controllers
             List<Query> queriesWithErrors = new();
             foreach (Query query in quiz.Questions)
             {
-                if (query.Count > query.Replies.Count)
+                // if there is no replies
+                if (query.Replies.Count == 0)
+                {
                     queriesWithErrors.Add(query);
+                    continue;
+                }
+
+                // if Count > reolies or count == 0 (to avoid zero division, + it useless): then count = count of replies;
+                if (query.Count > query.Replies.Count || query.Count == 0)
+                    query.Count = query.Replies.Count;
             }
 
             quiz.Questions = quiz.Questions.Except(queriesWithErrors).ToList();

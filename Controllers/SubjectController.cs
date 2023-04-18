@@ -1,10 +1,7 @@
 ﻿using DistantEdu.Command.Subjects;
-using DistantEdu.Data;
 using DistantEdu.ViewModels;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace DistantEdu.Controllers
@@ -12,20 +9,8 @@ namespace DistantEdu.Controllers
     [Authorize]
     [ApiController]
     [Route("[controller]")]
-    public class SubjectController : ControllerBase
+    public class SubjectController : BaseController
     {
-        private readonly ILogger<SubjectController> _logger;
-        private readonly ApplicationDbContext _context;
-        private readonly IMediator _mediator;
-        public SubjectController(ILogger<SubjectController> logger,
-                                ApplicationDbContext context,
-                                IMediator mediator)
-        {
-            _logger = logger;
-            _context = context;
-            _mediator = mediator;
-        }
-
         [HttpGet]
         [ProducesResponseType(typeof(string), 200)]
         public async Task<ActionResult> Get()
@@ -33,7 +18,7 @@ namespace DistantEdu.Controllers
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } UserClaims) 
                 return Unauthorized();
             GetSubjectQuery query = new GetSubjectQuery() { Name = UserClaims.Subject.Name };
-            IEnumerable<SubjectViewModel> viewModels = await _mediator.Send(query);
+            IEnumerable<SubjectViewModel> viewModels = await Mediator.Send(query);
             return Ok(viewModels ?? new List<SubjectViewModel>());
         }
 
@@ -46,7 +31,7 @@ namespace DistantEdu.Controllers
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } userClaims)
                 return Unauthorized();
 
-            var subjVms = await _mediator.Send(new GetSubjectByIdQuery() { Id = id, UserName = userClaims.Subject.Name });
+            var subjVms = await Mediator.Send(new GetSubjectByIdQuery() { Id = id, UserName = userClaims.Subject.Name });
             return Ok(subjVms);
         }
 
@@ -56,7 +41,7 @@ namespace DistantEdu.Controllers
         public async Task<IActionResult> Post([FromBody] SubjectViewModel subjectVm)
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } AuthorClaims) return NoContent();
-            await _mediator.Send(new PostSubjectRequest { AuthorName = AuthorClaims.Subject.Name, SubjectVm = subjectVm });
+            await Mediator.Send(new PostSubjectRequest { AuthorName = AuthorClaims.Subject.Name, SubjectVm = subjectVm });
             return new CreatedAtActionResult("Post", "Subject", subjectVm.Name, subjectVm);
         }
 
@@ -65,7 +50,7 @@ namespace DistantEdu.Controllers
         [Route("{id}")]
         public async Task<ActionResult> Put([FromBody] SubjectViewModel subject)
         {
-            await _mediator.Send(new PutSubjectRequest { Subject = subject });
+            await Mediator.Send(new PutSubjectRequest { Subject = subject });
             return new NoContentResult();
         }
 
@@ -75,11 +60,9 @@ namespace DistantEdu.Controllers
         [ProducesResponseType(404)]
         public async Task<ActionResult> Delete(int id)
         {
-            var sub = await _context.Subjects.FirstOrDefaultAsync(sub => sub.Id == id);
-            if (sub is not { } subject) return new NotFoundResult();
-            _context.Subjects.Remove(subject);
-            await _context.SaveChangesAsync();
-            return new NoContentResult();
+            if (await Mediator.Send(new RemoveSubjectRequest { SubjectId = id }))
+                return NoContent();
+            return NotFound();
         }
     }
 }

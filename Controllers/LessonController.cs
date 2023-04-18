@@ -1,14 +1,10 @@
 ﻿using DistantEdu.Command.Lessons;
-using DistantEdu.Data;
 using DistantEdu.MessageObject;
 using DistantEdu.Models.SubjectFeature;
-using DistantEdu.Services;
 using DistantEdu.ViewModels;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography.Xml;
 
 namespace DistantEdu.Controllers
 {
@@ -17,42 +13,29 @@ namespace DistantEdu.Controllers
     [Route("[controller]")]
     public class LessonController : BaseController
     {
-        private readonly ApplicationDbContext _context;
-        private readonly LessonService _lessonService;
-        public LessonController(ApplicationDbContext context,
-            LessonService lessonService) : base()
-        {
-            _context = context;
-            _lessonService = lessonService;
-        }
-
         [HttpGet]
         [ProducesResponseType(200)]
         public async Task<ActionResult<LessonViewModel?>> GetLesson(int subjectId, int order)
         {
-            // if there is no subscription for the subject and user is student, then NotFound returned;
-            if (!_context.StudentProfiles
-                .Include(sp => sp.SubjectSubscriptions).Any(sp => sp.Name == UserName &&
-                    sp.SubjectSubscriptions.Any(ss => ss.SubjectId == subjectId))
-                && await isInRoleAsync(Roles.Student))
-            {
-                return NotFound("Subject subscription not found");
-            }
+            if (_currentUser is not { })
+                return Unauthorized();
 
-            var lessonViewModel = await _lessonService.GetLessonByOrderAsync(subjectId, order, UserName);
-            if (lessonViewModel is { LessonScoreId: { } } lvm)
-                await _lessonService.DecideIfLessonPassedAsync((int)lvm.LessonScoreId);
+            GetLessonByOrderAndSubjectIdQuery lessonQuery = new()
+            {
+                User = _currentUser,
+                SubjectId = subjectId,
+                Order = order
+            };
+
+            var lessonViewModel = await Mediator.Send(lessonQuery);
             return Ok(lessonViewModel);
         }
 
         [HttpPost]
         public async Task<ActionResult> PostLesson(int subjectId, [FromBody] LessonMessage lessonMessage)
         {
-            if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
-                return BadRequest("Subject with given id not found");
-            Lesson lesson = new(lessonMessage);
-            subject.Lessons.Add(lesson);
-            await _context.SaveChangesAsync();
+            if (await Mediator.Send(new PostLessonRequest { SubjectId = subjectId, LessonMessage = lessonMessage}) is not { } lesson)
+                return BadRequest($"{nameof(Lesson)} was not created");
             return CreatedAtAction(nameof(PostLesson), lesson);
         }
 

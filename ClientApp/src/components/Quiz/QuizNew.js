@@ -45,19 +45,19 @@ export default function QuizNew(){
 
     useEffect(() => {
         if (state.isReady) return;
-        const quizJson = localStorage.getItem(`quiz${id}`);
+        const quizJson = localStorage.getItem(`quiz${params.split('-', 2)[0]}`);
         const quiz = JSON.parse(quizJson)
         setState(
             {
                 ...state,
                 isReady: true,
-                quiz : !!quiz? quiz : {
+                quiz : !!quiz? {...quiz, lessonId: params.split('-', 2)[0]} : {
                     name: '',
                     description: '',
                     duration: 0,
                     qType: 0,
                     count: 0,
-                    lessonId: id,
+                    lessonId: params.split('-', 2)[0],
                     questions: []
                 }
             }
@@ -225,7 +225,7 @@ export default function QuizNew(){
         const response = await Backend.GetInstance().Post('quiz', state.quiz, () => navigate(-1));
         if (response.ok){
             alert('Quiz posted and will be removed from local storage');
-            localStorage.removeItem(`quiz${id}`)
+            localStorage.removeItem(`quiz${id}`);
         } else {
             alert(`Something got wrong. Status: ${response.status}`)
         }

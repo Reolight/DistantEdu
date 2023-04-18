@@ -81,6 +81,29 @@ var Backend = /** @class */ (function () {
             });
         });
     };
+    Backend.prototype.Delete = function (address) {
+        return __awaiter(this, void 0, void 0, function () {
+            var token, response, data;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, AuthorizeService_1["default"].getAccessToken()];
+                    case 1:
+                        token = _a.sent();
+                        return [4 /*yield*/, fetch(address, {
+                                headers: !token ? {} : { 'Authorization': "Bearer ".concat(token) },
+                                method: 'delete'
+                            })];
+                    case 2:
+                        response = _a.sent();
+                        return [4 /*yield*/, response.json()];
+                    case 3:
+                        data = _a.sent();
+                        console.log(data);
+                        return [2 /*return*/, data];
+                }
+            });
+        });
+    };
     Backend.prototype.Post = function (address, object, onDone) {
         if (onDone === void 0) { onDone = null; }
         return __awaiter(this, void 0, void 0, function () {

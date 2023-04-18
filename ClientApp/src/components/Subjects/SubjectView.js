@@ -89,7 +89,7 @@ export default function SubjectView() {
                             }}
                             
                             editQuery={ editChild }
-                            removeQuery={(id) => console.log(`remove was pressed but nothing happened)))`)}
+                            removeQuery={(id) => Backend.GetInstance().Delete(`lesson?lessonId=${id}`)}
                             style={ lesson.isPassed? {backgroundColor: "#cefad0"} : {}}
                         />
                     })}

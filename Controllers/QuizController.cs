@@ -1,12 +1,9 @@
-﻿using System.Net.Http.Headers;
-using DistantEdu.Data;
-using DistantEdu.Models;
+﻿using DistantEdu.Data;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DistantEdu.Controllers
 {

@@ -1,17 +1,14 @@
 ﻿using DistantEdu.Command.Lessons;
 using DistantEdu.Data;
 using DistantEdu.MessageObject;
-using DistantEdu.Models;
 using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
 using DistantEdu.ViewModels;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
-using System.Security.Claims;
+using System.Security.Cryptography.Xml;
 
 namespace DistantEdu.Controllers
 {
@@ -81,16 +78,10 @@ namespace DistantEdu.Controllers
         }
 
         [HttpDelete]
-        public async Task<ActionResult> DeleteLesson(int subjectId, int lessonId)
+        public async Task<ActionResult> DeleteLesson(int lessonId)
         {
-            if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
-                return BadRequest("Subject with given id not found");
-            if (subject.Lessons.Remove(subject.Lessons.First(l => l.Id == lessonId)))
-            {
-                await _context.SaveChangesAsync();
+            if (await Mediator.Send(new RemoveLessonRequest { User = _currentUser, Id = lessonId }))
                 return NoContent();
-            }
-
             return BadRequest("Lessow was not deleted because it hadn't exist.");
         }
     }

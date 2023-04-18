@@ -24,6 +24,18 @@ export default class Backend{
         return data;
     }
 
+    public async Delete(address){
+        const token = await authService.getAccessToken();
+        const response = await fetch(address, {
+            headers: !token ? {} : { 'Authorization': `Bearer ${token}` },
+            method: 'delete'
+        });
+
+        const data = await response.json();
+        console.log(data);
+        return data;
+    }
+
     public async Post(address, object, onDone: Function | null = null){
         const auth = await this.makeAuthString()
         const response = await this.makeUpdate(address, object, auth, post)

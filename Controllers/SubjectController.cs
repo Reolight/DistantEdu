@@ -17,7 +17,7 @@ namespace DistantEdu.Controllers
         {
             if (User.FindFirst(ClaimTypes.NameIdentifier) is not { Subject.Name: { } } UserClaims) 
                 return Unauthorized();
-            GetSubjectQuery query = new GetSubjectQuery() { Name = UserClaims.Subject.Name };
+            GetSubjectQuery query = new() { Name = UserClaims.Subject.Name };
             IEnumerable<SubjectViewModel> viewModels = await Mediator.Send(query);
             return Ok(viewModels ?? new List<SubjectViewModel>());
         }

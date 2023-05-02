@@ -4,9 +4,7 @@ using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Types;
 using DistantEdu.ViewModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 
 namespace DistantEdu.Services
 {

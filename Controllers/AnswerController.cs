@@ -1,6 +1,5 @@
 using DistantEdu.Data;
 using DistantEdu.Models;
-using DistantEdu.Models.SubjectFeature;
 using DistantEdu.Services;
 using DistantEdu.ViewModels;
 using Microsoft.AspNetCore.Authorization;
